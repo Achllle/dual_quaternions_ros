@@ -33,6 +33,7 @@ before_install:
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
+  - pip install -I nose
 install:
   - pip install -e .
 # command to run tests
