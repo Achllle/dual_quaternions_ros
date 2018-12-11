@@ -33,9 +33,11 @@ before_install:
   # Prepare rosdep to install dependencies.
   - sudo rosdep init
   - rosdep update
-  - pip install -I nose
 install:
+  - pip install -I nose
+  - pip install --upgrade numpy
   - pip install -e .
 # command to run tests
 script:
   - python setup.py test
+  -
