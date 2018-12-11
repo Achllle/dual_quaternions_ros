@@ -35,9 +35,9 @@ before_install:
   - rosdep update
 install:
   - pip install -I nose
-  - pip install --upgrade numpy
+  - sudo pip uninstall numpy -y
+  - pip install numpy
   - pip install -e .
 # command to run tests
 script:
   - python setup.py test
-  -
