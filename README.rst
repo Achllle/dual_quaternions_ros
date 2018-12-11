@@ -1,6 +1,9 @@
 ROS Dual Quaternions
 ====================
 
+.. image:: https://travis-ci.com/Achllle/dual_quaternions_ros.svg?branch=master
+    :target: https://travis-ci.com/Achllle/dual_quaternions_ros
+
 Why use dual quaternions?
 -------------------------
 
