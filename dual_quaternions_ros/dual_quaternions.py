@@ -224,7 +224,8 @@ class DualQuaternion(object):
 
     def inverse(self):
         """Dual quaternion inverse"""
-        return DualQuaternion.identity() / self
+        q_r_inv = self.q_r.inverse()
+        return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
 
     def normalize(self):
         """Normalize dual quaternion"""

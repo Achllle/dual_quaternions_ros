@@ -87,13 +87,18 @@ class TestDualQuaternion(TestCase):
         dq_composed = dq_pure_rot * dq_pure_trans
         self.assertEqual(T_composed.all(), dq_composed.homogeneous_matrix.all())
 
-
     def test_div(self):
         self.assertAlmostEqual(self.random_dq/self.random_dq, self.unit_dq)
         self.assertAlmostEqual(self.random_dq/self.unit_dq, self.random_dq)
 
     def test_inverse(self):
-        self.assertAlmostEqual(self.unit_dq / self.random_dq, self.random_dq.inverse())
+        # use known matrix inversion
+        T_1_2 = np.array([[0, 1, 0, 2], [-1, 0, 0, 4], [0, 0, 1, 6], [0, 0, 0, 1]])
+        T_2_1 = np.array([[0, -1, 0, 4], [1, 0, 0, -2], [0, 0, 1, -6], [0, 0, 0, 1]])
+        dq_1_2 = DualQuaternion.from_homogeneous_matrix(T_1_2)
+        dq_2_1 = DualQuaternion.from_homogeneous_matrix(T_2_1)
+
+        self.assertAlmostEqual(dq_2_1.homogeneous_matrix.all(), dq_1_2.inverse().homogeneous_matrix.all())
 
     def test_str_repr_is_string(self):
         # test that __str__ and __repr__ are working
