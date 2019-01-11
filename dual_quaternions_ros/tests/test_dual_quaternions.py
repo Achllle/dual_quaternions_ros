@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from dual_quaternions_ros import DualQuaternion
 import numpy as np
@@ -124,3 +125,16 @@ class TestDualQuaternion(TestCase):
         point_f1_matrix = np.dot(T_f1_f2, np.expand_dims(np.array(point_f2 + [1]), 1))
         point_f1_dq = np.array(dq_f1_f2.transform_point(point_f2))
         self.assertEqual(point_f1_matrix[:3].T.all(), point_f1_dq.all())
+
+    def test_saving_loading(self):
+        # get the cwd so we can create a couple test files that we'll remove later
+        dir = os.getcwd()
+        self.unit_dq.save(dir + '/identity.json')
+        # load it back in
+        loaded_unit = DualQuaternion.from_file(dir + '/identity.json')
+        self.assertEqual(self.unit_dq, loaded_unit)
+        # clean up
+        os.remove(dir + '/identity.json')
+
+    def test_loading_illegal(self):
+        self.assertRaises(IOError, DualQuaternion.from_file, 'boguspath')

@@ -7,6 +7,7 @@ License: MIT
 import numpy as np
 import quaternion
 import warnings
+import json
 
 import geometry_msgs.msg
 
@@ -242,6 +243,24 @@ class DualQuaternion(object):
     def nlerp(self, other, t):
         raise NotImplementedError()
 
+    def save(self, path):
+        """Save the transformation to file
+
+        :param path: absolute folder path and filename + extension
+        :raises IOError: when the path does not exist
+        """
+        with open(path, 'w') as outfile:
+            json.dump(self.as_dict, outfile)
+
+    @classmethod
+    def from_file(cls, path):
+        """Load a DualQuaternion from file"""
+        with open(path) as json_file:
+            qdict = json.load(json_file)
+
+        return cls.from_dq_array([qdict['r_w'], qdict['r_x'], qdict['r_y'], qdict['r_z'],
+                                  qdict['d_w'], qdict['d_x'], qdict['d_y'], qdict['d_z']])
+
     @property
     def homogeneous_matrix(self):
         """Homogeneous 4x4 transformation matrix from the dual quaternion
@@ -315,8 +334,16 @@ class DualQuaternion(object):
     def normalized(self):
         """
         Copy of the normalized quaternion rotation
+
+        :return: dict with keys r_w, r_x, r_y, r_z, d_w, d_x, d_y, d_z
         """
         return DualQuaternion(self.q_r.normalized(), self.q_d)
+
+    @property
+    def as_dict(self):
+        """dictionary containing the dual quaternion"""
+        return {'r_w': self.q_r.w, 'r_x': self.q_r.x, 'r_y': self.q_r.y, 'r_z': self.q_r.z,
+                'd_w': self.q_d.w, 'd_x': self.q_d.x, 'd_y': self.q_d.y, 'd_z': self.q_d.z}
 
     @property
     def skew(self):
