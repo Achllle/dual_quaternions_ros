@@ -52,4 +52,3 @@ To Do
 -----
 
 * transforming multiple points without using matrices
-* always return positive rotation quaternion

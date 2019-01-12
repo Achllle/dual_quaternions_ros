@@ -100,6 +100,25 @@ class TestDualQuaternion(TestCase):
 
         self.assertAlmostEqual(dq_2_1.homogeneous_matrix.all(), dq_1_2.inverse().homogeneous_matrix.all())
 
+    def test_equal(self):
+        self.assertTrue(self.unit_dq == DualQuaternion.identity())
+        self.assertTrue(self.unit_dq == DualQuaternion(-np.quaternion(1, 0, 0, 0), -np.quaternion(0, 0, 0, 0)))
+        self.assertFalse(self.unit_dq == DualQuaternion(np.quaternion(1, 0, 0, 1), -np.quaternion(0, 0, 0, 0)))
+        theta1 = np.pi / 180 * 20  # 20 deg
+        T_pure_rot = np.array([[1., 0., 0., 0.],
+                               [0., np.cos(theta1), -np.sin(theta1), 0.],
+                               [0., np.sin(theta1), np.cos(theta1), 0.],
+                               [0., 0., 0., 1.]])
+        dq_pure_rot = DualQuaternion.from_homogeneous_matrix(T_pure_rot)
+        # manually flip sign on terms
+        dq_pure_rot.q_r = - dq_pure_rot.q_r
+        dq_pure_rot.q_d = - dq_pure_rot.q_d
+        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+        dq_pure_rot.q_d = - dq_pure_rot.q_d
+        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+        dq_pure_rot.q_r = - dq_pure_rot.q_r
+        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+
     def test_str_repr_is_string(self):
         # test that __str__ and __repr__ are working
         self.assertTrue(isinstance(repr(self.unit_dq), basestring))
