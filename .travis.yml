@@ -36,7 +36,6 @@ before_install:
 install:
   - pip install -I nose
   - sudo pip uninstall numpy -y
-  - pip install numpy
   - pip install -e .
 # command to run tests
 script:
