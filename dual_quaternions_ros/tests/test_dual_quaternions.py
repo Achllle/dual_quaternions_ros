@@ -162,3 +162,31 @@ class TestDualQuaternion(TestCase):
 
     def test_loading_illegal(self):
         self.assertRaises(IOError, DualQuaternion.from_file, 'boguspath')
+
+    def test_sclerp_position(self):
+        """test Screw Linear Interpolation for diff position, same orientation"""
+        dq1 = DualQuaternion.from_translation_vector([2, 2, 2])
+        dq2 = DualQuaternion.from_translation_vector([3, 4, -2])
+        interpolated1 = DualQuaternion.sclerp(dq1, dq2, 0.5)
+        expected1 = DualQuaternion.from_translation_vector([2.5, 3, 0])
+        self.assertTrue(interpolated1 == expected1)
+        interpolated2 = DualQuaternion.sclerp(dq1, dq2, 0.1)
+        expected2 = DualQuaternion.from_translation_vector([2.1, 2.2, 1.6])
+        self.assertTrue(interpolated2 == expected2)
+
+    def test_sclerp_orientation(self):
+        """test Screw Linear Interpolation for diff orientation, same position"""
+        T_id = DualQuaternion.identity().homogeneous_matrix
+        T_id[0:2, 0:2] = np.array([[0, -1], [1, 0]])  # rotate 90 around z
+        dq2 = DualQuaternion.from_homogeneous_matrix(T_id)
+        interpolated1 = DualQuaternion.sclerp(self.unit_dq, dq2, 0.5)
+        T_exp = DualQuaternion.identity().homogeneous_matrix
+        sq2 = np.sqrt(2)
+        T_exp[0:2, 0:2] = np.array([[sq2, -sq2], [sq2, sq2]])  # rotate 45 around z
+        expected1 = DualQuaternion.from_homogeneous_matrix(T_exp)
+        self.assertTrue(interpolated1 == expected1)
+        interpolated2 = DualQuaternion.sclerp(self.unit_dq, dq2, 0)
+        interpolated3 = DualQuaternion.sclerp(self.unit_dq, dq2, 1)
+        self.assertTrue(interpolated2 == self.unit_dq)
+        self.assertTrue(interpolated3 == dq2)
+
