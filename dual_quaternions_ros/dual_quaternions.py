@@ -72,6 +72,13 @@ class DualQuaternion(object):
         """
         return self.__mul__(other)
 
+    def __rmul__(self, other):
+        """Multiplication with a scalar
+
+        :param other: scalar
+        """
+        return DualQuaternion(self.q_r * other, self.q_d * other)
+
     def __div__(self, other):
         """
         Dual quaternion division. See __truediv__
@@ -105,8 +112,8 @@ class DualQuaternion(object):
         return DualQuaternion(quaternion.one, self.q_d + other.q_d)
 
     def __eq__(self, other):
-        return (self.q_r == other.q_r or self.q_r == -other.q_r) \
-               and (self.q_d == other.q_d or self.q_d == -other.q_d)
+        return (np.isclose(self.q_r, other.q_r) or np.isclose(self.q_r, -other.q_r)) \
+               and (np.isclose(self.q_d, other.q_d) or np.isclose(self.q_d, -other.q_d))
 
     def __ne__(self, other):
         return not self == other
@@ -238,9 +245,26 @@ class DualQuaternion(object):
         """True if the norm of the rotation part of the dual quaternion is 1"""
         return np.allclose(self.q_r.norm(), 1.0)
 
-    def slerp(self, other, t):
-        """Spherical Linear Interpolation"""
-        raise NotImplementedError()
+    def pow(self, exponent):
+        """self^exponent"""
+        return self.exp(exponent * self.log(self))
+
+    @classmethod
+    def exp(cls, dq):
+        q_r = dq.q_r.exp()
+        q_d = q_r * dq.q_d
+        return cls(q_r, q_d)
+
+    @classmethod
+    def log(cls, dq):
+        q_r = dq.q_r.log()
+        q_d = dq.q_r.inverse() * dq.q_d
+        return cls(q_r, q_d)
+
+    @classmethod
+    def sclerp(cls, start, stop, t):
+        """Screw Linear Interpolation"""
+        return (stop * start.conjugate()).pow(t) * start
 
     def nlerp(self, other, t):
         raise NotImplementedError()
