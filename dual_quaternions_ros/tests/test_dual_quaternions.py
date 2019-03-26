@@ -184,13 +184,9 @@ class TestDualQuaternion(TestCase):
         sq22 = np.sqrt(2)/2
         T_exp[0:2, 0:2] = np.array([[sq22, -sq22], [sq22, sq22]])  # rotate 45 around z
         expected1 = DualQuaternion.from_homogeneous_matrix(T_exp)
-        print interpolated1
-        print expected1
         self.assertTrue(interpolated1 == expected1)
         interpolated2 = DualQuaternion.sclerp(self.unit_dq, dq2, 0)
         interpolated3 = DualQuaternion.sclerp(self.unit_dq, dq2, 1)
-        print interpolated2
-        print interpolated3
         self.assertTrue(interpolated2 == self.unit_dq)
         self.assertTrue(interpolated3 == dq2)
 
