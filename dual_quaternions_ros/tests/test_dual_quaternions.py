@@ -181,8 +181,8 @@ class TestDualQuaternion(TestCase):
         dq2 = DualQuaternion.from_homogeneous_matrix(T_id)
         interpolated1 = DualQuaternion.sclerp(self.unit_dq, dq2, 0.5)
         T_exp = DualQuaternion.identity().homogeneous_matrix
-        sq2 = np.sqrt(2)
-        T_exp[0:2, 0:2] = np.array([[sq2, -sq2], [sq2, sq2]])  # rotate 45 around z
+        sq22 = np.sqrt(2)/2
+        T_exp[0:2, 0:2] = np.array([[sq22, -sq22], [sq22, sq22]])  # rotate 45 around z
         expected1 = DualQuaternion.from_homogeneous_matrix(T_exp)
         print interpolated1
         print expected1
