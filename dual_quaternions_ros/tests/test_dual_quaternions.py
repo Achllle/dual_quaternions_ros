@@ -61,7 +61,6 @@ class TestDualQuaternion(TestCase):
         dq2 = DualQuaternion.from_translation_vector([1, 2, 3])
         sum = dq1 + dq2
         self.assertEqual(sum.q_d, np.quaternion(0., 2.5, 4., 5.5))
-        self.assertEqual(sum.translation, [5, 8, 11])
 
     def test_mult(self):
         # quaternion multiplication. Compare with homogeneous transformation matrices

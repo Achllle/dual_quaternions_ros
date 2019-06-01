@@ -6,7 +6,6 @@ License: MIT
 """
 import numpy as np
 import quaternion
-import warnings
 import json
 
 import geometry_msgs.msg
@@ -97,12 +96,10 @@ class DualQuaternion(object):
     def __add__(self, other):
         """
         Dual Quaternion addition.
-        :param other: pure translation dual quaternion
-        :return: DualQuaternion(quaternion.one, self.q_d + other.q_d)
+        :param other: dual quaternion
+        :return: DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
         """
-        if self.q_r != quaternion.one or other.q_r != quaternion.one:
-            warnings.warn('One or both of quaternions passed is not a pure translation!')
-        return DualQuaternion(quaternion.one, self.q_d + other.q_d)
+        return DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
 
     def __eq__(self, other):
         return (self.q_r == other.q_r or self.q_r == -other.q_r) \
