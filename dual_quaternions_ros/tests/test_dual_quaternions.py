@@ -40,7 +40,10 @@ class TestDualQuaternion(TestCase):
         dq7 = DualQuaternion.from_homogeneous_matrix(T)
         self.assertEqual(dq7.q_r, quaternion.one)
         self.assertEqual(dq7.translation, [2, 3, 1])
-        self.assertEqual(dq7.homogeneous_matrix.all(), T.all())
+        try:
+            np.testing.assert_array_almost_equal(dq7.homogeneous_matrix, T)
+        except AssertionError as e:
+            self.fail(e)
         # from a point
         dq8 = DualQuaternion.from_translation_vector([4, 6, 8])
         self.assertEqual(dq8.translation, [4, 6, 8])
@@ -76,16 +79,26 @@ class TestDualQuaternion(TestCase):
 
         T_double_rot = np.dot(T_pure_rot, T_pure_rot)
         dq_double_rot = dq_pure_rot * dq_pure_rot
-        self.assertEqual(T_double_rot.all(), dq_double_rot.homogeneous_matrix.all())
+        try:
+            np.testing.assert_array_almost_equal(T_double_rot, dq_double_rot.homogeneous_matrix)
+        except AssertionError as e:
+            self.fail(e)
 
         T_double_trans = np.dot(T_pure_trans, T_pure_trans)
         dq_double_trans = dq_pure_trans * dq_pure_trans
-        self.assertEqual(T_double_trans.all(), dq_double_trans.homogeneous_matrix.all())
+        try:
+            np.testing.assert_array_almost_equal(T_double_trans, dq_double_trans.homogeneous_matrix)
+        except AssertionError as e:
+            self.fail(e)
 
         # composed: trans and rot
         T_composed = np.dot(T_pure_rot, T_pure_trans)
         dq_composed = dq_pure_rot * dq_pure_trans
-        self.assertEqual(T_composed.all(), dq_composed.homogeneous_matrix.all())
+        dq_composed = dq_pure_rot * dq_pure_trans
+        try:
+            np.testing.assert_array_almost_equal(T_composed, dq_composed.homogeneous_matrix)
+        except AssertionError as e:
+            self.fail(e)
 
     def test_div(self):
         self.assertAlmostEqual(self.random_dq/self.random_dq, self.unit_dq)
@@ -98,7 +111,10 @@ class TestDualQuaternion(TestCase):
         dq_1_2 = DualQuaternion.from_homogeneous_matrix(T_1_2)
         dq_2_1 = DualQuaternion.from_homogeneous_matrix(T_2_1)
 
-        self.assertAlmostEqual(dq_2_1.homogeneous_matrix.all(), dq_1_2.inverse().homogeneous_matrix.all())
+        try:
+            np.testing.assert_array_almost_equal(dq_2_1.homogeneous_matrix, dq_1_2.inverse().homogeneous_matrix)
+        except AssertionError as e:
+            self.fail(e)
 
     def test_equal(self):
         self.assertTrue(self.unit_dq == DualQuaternion.identity())
@@ -113,11 +129,20 @@ class TestDualQuaternion(TestCase):
         # manually flip sign on terms
         dq_pure_rot.q_r = - dq_pure_rot.q_r
         dq_pure_rot.q_d = - dq_pure_rot.q_d
-        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+        try:
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+        except AssertionError as e:
+            self.fail(e)
         dq_pure_rot.q_d = - dq_pure_rot.q_d
-        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+        try:
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+        except AssertionError as e:
+            self.fail(e)
         dq_pure_rot.q_r = - dq_pure_rot.q_r
-        self.assertAlmostEqual(dq_pure_rot.homogeneous_matrix.all(), T_pure_rot.all())
+        try:
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+        except AssertionError as e:
+            self.fail(e)
 
     def test_str_repr_is_string(self):
         # test that __str__ and __repr__ are working
@@ -148,7 +173,10 @@ class TestDualQuaternion(TestCase):
         # point is in f2, transformation will express it in f1
         point_f1_matrix = np.dot(T_f1_f2, np.expand_dims(np.array(point_f2 + [1]), 1))
         point_f1_dq = np.array(dq_f1_f2.transform_point(point_f2))
-        self.assertEqual(point_f1_matrix[:3].T.all(), point_f1_dq.all())
+        try:
+            np.testing.assert_array_almost_equal(point_f1_matrix[:3].T.flatten(), point_f1_dq.flatten(), decimal=3)
+        except AssertionError as e:
+            self.fail(e)
 
     def test_saving_loading(self):
         # get the cwd so we can create a couple test files that we'll remove later
