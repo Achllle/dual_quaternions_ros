@@ -220,16 +220,36 @@ class DualQuaternion(object):
         return cls(quaternion.one, np.quaternion(0., 0., 0., 0.))
 
     def conjugate(self):
-        """Dual quaternion conjugate"""
+        """
+        Return the individual quaternion conjugates (qr, qd)* = (qr*, qd*)
+
+        This is equivalent to inverse of a homogeneous matrix. See also DualQuaternion.dual_conjugate().
+        """
         return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
 
+    def dual_conjugate(self):
+        """
+        Return the dual quaternion conjugate ( qr + eps*qd )* = ( qr - eps*qd )
+
+        This is the mathematical conjugate. See also DualQuaternion.conjugate()
+        """
+        return DualQuaternion(self.q_r, -self.q_d)
+
     def inverse(self):
-        """Dual quaternion inverse"""
+        """
+        Return the dual quaternion inverse
+
+        For unit dual quaternions dq.inverse() = dq.conjugate()
+        """
         q_r_inv = self.q_r.inverse()
         return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
 
     def normalize(self):
-        """Normalize dual quaternion"""
+        """
+        Normalize this dual quaternion
+
+        Modifies in place, so this will not preserve self
+        """
         normalized = self.normalized
         self.q_r = normalized.q_r
         self.q_d = normalized.q_d
@@ -334,11 +354,7 @@ class DualQuaternion(object):
 
     @property
     def normalized(self):
-        """
-        Copy of the normalized quaternion rotation
-
-        :return: dict with keys r_w, r_x, r_y, r_z, d_w, d_x, d_y, d_z
-        """
+        """Return a copy of the normalized quaternion rotation"""
         return DualQuaternion(self.q_r.normalized(), self.q_d)
 
     @property
