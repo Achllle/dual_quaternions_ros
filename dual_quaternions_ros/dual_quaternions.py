@@ -220,8 +220,12 @@ class DualQuaternion(object):
         return cls(quaternion.one, np.quaternion(0., 0., 0., 0.))
 
     def conjugate(self):
-        """Dual quaternion conjugate"""
+        """Individual quaternion conjugates (qr, qd)* = (qr*, qd*)"""
         return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
+
+    def dual_conjugate(self):
+        """Dual quaternion conjugate ( qr + eps*qd )* = ( qr - eps*qd )"""
+        return DualQuaternion(self.q_r, -self.q_d)
 
     def inverse(self):
         """Dual quaternion inverse"""
