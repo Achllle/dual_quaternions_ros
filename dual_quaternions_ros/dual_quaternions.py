@@ -54,15 +54,22 @@ class DualQuaternion(object):
         """
         Dual quaternion multiplication
 
-        :param other: right hand side of the multiplication: DualQuaternion instance
+        :param other: right hand side of the multiplication: DualQuaternion instance or number
         :return product: DualQuaternion object. Math:
                       dq1 * dq2 = dq1_r * dq2_r + (dq1_r * dq2_d + dq1_d * dq2_r) * eps
         """
-        q_r_prod = self.q_r * other.q_r
-        q_d_prod = self.q_r * other.q_d + self.q_d * other.q_r
-        product = DualQuaternion(q_r_prod, q_d_prod)
+        try:
+            q_r_prod = self.q_r * other.q_r
+            q_d_prod = self.q_r * other.q_d + self.q_d * other.q_r
+            product = DualQuaternion(q_r_prod, q_d_prod)
+        except AttributeError:  # assume a number
+            return DualQuaternion(other * self.q_r, other * self.q_d)
 
         return product
+
+    def __rmul__(self, other):
+        """Alternative multiplication, reserved for scalar multiplication"""
+        return self * other
 
     def __imul__(self, other):
         """
@@ -75,10 +82,13 @@ class DualQuaternion(object):
         """
         Dual quaternion division. See __truediv__
 
-        :param other: DualQuaternion instance
+        :param other: DualQuaternion instance or number
         :return: DualQuaternion instance
         """
-        return self.__truediv__(other)
+        try:
+            return self.__truediv__(other)
+        except AttributeError:  # assume number
+            return DualQuaternion(self.q_r / other, self.q_d / other)
 
     def __truediv__(self, other):
         """
@@ -255,11 +265,32 @@ class DualQuaternion(object):
         """True if the norm of the rotation part of the dual quaternion is 1"""
         return np.allclose(self.q_r.norm(), 1.0)
 
-    def slerp(self, other, t):
-        """Spherical Linear Interpolation"""
-        raise NotImplementedError()
+    @staticmethod
+    def dlb(dqs, weights=None):
+        """
+        Dual Quaternions Linear Blending: linear combination of a set of DQs, individually weighted and normalized
 
-    def nlerp(self, other, t):
+                                  w1*dq1 + w2*dq2 + ...
+        DLB(w; dq1, dq2, ...) = -------------------------
+                                ||w1*dq1 + w2*dq2 + ...||
+
+        :param dqs: list of DualQuaternions
+        :param weights: list of individual weights to weight the importance of the corresponding dual quaternion
+                        if None, equal weights are used
+        :return: Dual Quaternion
+        """
+        if not weights:
+            weights = len(dqs) * [1]
+
+        sum = weights[0] * dqs[0]
+        for (dq, weight) in zip(dqs, weights)[1:]:
+            sum += weight * dq
+        sum.normalize()
+
+        return sum
+
+    def sclerp(self, other, t):
+        """Screw Linear Interpolation"""
         raise NotImplementedError()
 
     def save(self, path):

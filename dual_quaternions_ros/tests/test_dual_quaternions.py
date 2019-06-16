@@ -102,6 +102,7 @@ class TestDualQuaternion(TestCase):
     def test_div(self):
         self.assertAlmostEqual(self.random_dq/self.random_dq, self.unit_dq)
         self.assertAlmostEqual(self.random_dq/self.unit_dq, self.random_dq)
+        self.assertAlmostEqual((self.random_dq / 5) * 5, self.random_dq)
 
     def test_inverse(self):
         # use known matrix inversion
@@ -112,6 +113,23 @@ class TestDualQuaternion(TestCase):
 
         try:
             np.testing.assert_array_almost_equal(dq_2_1.homogeneous_matrix, dq_1_2.inverse().homogeneous_matrix)
+        except AssertionError as e:
+            self.fail(e)
+
+    def test_dlb(self):
+        """Linear Blending"""
+        dqs_unit = 5 * [DualQuaternion.identity()]
+        self.assertAlmostEqual(DualQuaternion.identity(), DualQuaternion.dlb(dqs_unit))
+        pure_t1 = DualQuaternion.from_translation_vector([2,3,4])
+        pure_t2 = DualQuaternion.from_translation_vector([4,4,4])
+        weights_1 = [0, 1]
+        weights_2 = [1, 0]
+        weights_3 = [0.2, 0.8]
+        self.assertAlmostEqual(DualQuaternion.dlb([pure_t1, pure_t2], weights_1), pure_t2)
+        self.assertAlmostEqual(DualQuaternion.dlb([pure_t1, pure_t2], weights_2), pure_t1)
+        try:
+            np.testing.assert_array_almost_equal(DualQuaternion.dlb([pure_t1, pure_t2], weights_3).translation,
+                                                 [3.6, 3.8, 4])
         except AssertionError as e:
             self.fail(e)
 
