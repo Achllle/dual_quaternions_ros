@@ -276,11 +276,11 @@ class DualQuaternion(object):
 
         :param dqs: list of DualQuaternions
         :param weights: list of individual weights to weight the importance of the corresponding dual quaternion
-                        if None, equal weights are used
+                        if None, equal weights are used 1/len(w)
         :return: Dual Quaternion
         """
         if not weights:
-            weights = len(dqs) * [1]
+            weights = len(dqs) * [1./len(dqs)]
 
         sum = weights[0] * dqs[0]
         for (dq, weight) in zip(dqs, weights)[1:]:
