@@ -100,8 +100,13 @@ class TestDualQuaternion(TestCase):
             self.fail(e)
 
     def test_div(self):
-        self.assertAlmostEqual(self.random_dq/self.random_dq, self.unit_dq)
-        self.assertAlmostEqual(self.random_dq/self.unit_dq, self.random_dq)
+        try:
+            np.testing.assert_array_almost_equal((self.random_dq/self.random_dq).dq_array,
+                                                 self.unit_dq.dq_array)
+            np.testing.assert_array_almost_equal((self.random_dq/self.unit_dq).dq_array,
+                                                 self.random_dq.dq_array)
+        except AssertionError as e:
+            self.fail(e)
 
     def test_inverse(self):
         # use known matrix inversion
