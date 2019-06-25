@@ -31,13 +31,14 @@ class DualQuaternion(object):
     $ dq = DualQuaternion.identity() --> zero translation, unit rotation
 
     The underlying representation for a single quaternion uses the format [w x y z]
+    The rotation part (non-dual) will always be normalized.
     """
 
     def __init__(self, q_r, q_d):
         if not isinstance(q_r, np.quaternion) or not isinstance(q_d, np.quaternion):
             raise ValueError("q_r and q_d must be of type np.quaternion. Instead received: {} and {}".format(
                 type(q_r), type(q_d)))
-        self.q_r = q_r
+        self.q_r = q_r.normalized()
         self.q_d = q_d
 
     def __str__(self):

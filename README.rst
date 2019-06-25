@@ -25,12 +25,13 @@ Installation & Requirements
 
 In this directory::
 
-    pip install -e .
+    pip install .
 
 Requirements
 ~~~~~~~~~~~~
 
 * numpy-quaternion
+* scipy
 * geometry_msgs from ROS
 
 Usage
