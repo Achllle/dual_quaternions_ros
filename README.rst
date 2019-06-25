@@ -14,6 +14,12 @@ Why use dual quaternions?
 * easy normalization. Homogeneous tranformation matrices are orthogonal and due to floating point errors operations on them often result in matrices that need to be renormalized. This can be done using the Gram-Schmidt method but that is a slow algorithm. Quaternion normalization is very fast.
 * mathematically pleasing
 
+Functionality:
+* conversion from and to common data types and ROS messages
+* basic dual quaternion operations (add, mul, div, log, exp, conj, inv, pow)
+* interpolation: ScLERP, DLB
+* transformations
+
 Installation & Requirements
 ---------------------------
 
