@@ -32,9 +32,6 @@ class DualQuaternion(object):
 
     The underlying representation for a single quaternion uses the format [w x y z]
     The rotation part (non-dual) will always be normalized.
-
-    Inspired by 'A Beginners Guide to Dual-Quaternions' by Ben Kenwright and the dual quaternion
-    implementation of the hand_eye_calibration package from ethz-asl
     """
 
     def __init__(self, q_r, q_d):
