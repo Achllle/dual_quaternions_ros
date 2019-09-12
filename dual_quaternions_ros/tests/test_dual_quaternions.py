@@ -12,7 +12,7 @@ class TestDualQuaternion(TestCase):
     def setUp(self):
         self.unit_dq = DualQuaternion.identity()
         self.random_dq = DualQuaternion.from_dq_array(np.array([1,2,3,4,5,6,7,8]))
-        self.normalized_dq = self.random_dq.normalized
+        self.normalized_dq = self.random_dq.normalized()
 
     def test_creation(self):
         # from dual quaternion array
@@ -28,25 +28,25 @@ class TestDualQuaternion(TestCase):
         ros_pose.orientation.w = 1.
         dq5 = DualQuaternion.from_ros_pose(ros_pose)
         self.assertEqual(dq5, self.unit_dq)
-        self.assertEqual(dq5.ros_pose, ros_pose)
+        self.assertEqual(dq5.ros_pose(), ros_pose)
         # from ROS transform
         ros_transform = geometry_msgs.msg.Transform()
         ros_transform.rotation.w = 1.
         dq6 = DualQuaternion.from_ros_transform(ros_transform)
         self.assertEqual(dq5, dq6)
-        self.assertEqual(dq6.ros_transform, ros_transform)
+        self.assertEqual(dq6.ros_transform(), ros_transform)
         # from homogeneous transformation matrix
         T = np.array([[1, 0, 0, 2], [0, 1, 0, 3], [0, 0, 1, 1], [0, 0, 0, 1]])
         dq7 = DualQuaternion.from_homogeneous_matrix(T)
         self.assertEqual(dq7.q_r, quaternion.one)
-        self.assertEqual(dq7.translation, [2, 3, 1])
+        self.assertEqual(dq7.translation(), [2, 3, 1])
         try:
-            np.testing.assert_array_almost_equal(dq7.homogeneous_matrix, T)
+            np.testing.assert_array_almost_equal(dq7.homogeneous_matrix(), T)
         except AssertionError as e:
             self.fail(e)
         # from a point
         dq8 = DualQuaternion.from_translation_vector([4, 6, 8])
-        self.assertEqual(dq8.translation, [4, 6, 8])
+        self.assertEqual(dq8.translation(), [4, 6, 8])
 
     def test_unit(self):
         q_r_unit = np.quaternion(1, 0, 0, 0)
@@ -79,14 +79,14 @@ class TestDualQuaternion(TestCase):
         T_double_rot = np.dot(T_pure_rot, T_pure_rot)
         dq_double_rot = dq_pure_rot * dq_pure_rot
         try:
-            np.testing.assert_array_almost_equal(T_double_rot, dq_double_rot.homogeneous_matrix)
+            np.testing.assert_array_almost_equal(T_double_rot, dq_double_rot.homogeneous_matrix())
         except AssertionError as e:
             self.fail(e)
 
         T_double_trans = np.dot(T_pure_trans, T_pure_trans)
         dq_double_trans = dq_pure_trans * dq_pure_trans
         try:
-            np.testing.assert_array_almost_equal(T_double_trans, dq_double_trans.homogeneous_matrix)
+            np.testing.assert_array_almost_equal(T_double_trans, dq_double_trans.homogeneous_matrix())
         except AssertionError as e:
             self.fail(e)
 
@@ -95,16 +95,16 @@ class TestDualQuaternion(TestCase):
         dq_composed = dq_pure_rot * dq_pure_trans
         dq_composed = dq_pure_rot * dq_pure_trans
         try:
-            np.testing.assert_array_almost_equal(T_composed, dq_composed.homogeneous_matrix)
+            np.testing.assert_array_almost_equal(T_composed, dq_composed.homogeneous_matrix())
         except AssertionError as e:
             self.fail(e)
 
     def test_div(self):
         try:
-            np.testing.assert_array_almost_equal((self.random_dq/self.random_dq).dq_array,
-                                                 self.unit_dq.dq_array)
-            np.testing.assert_array_almost_equal((self.random_dq/self.unit_dq).dq_array,
-                                                 self.random_dq.dq_array)
+            np.testing.assert_array_almost_equal((self.random_dq/self.random_dq).dq_array(),
+                                                 self.unit_dq.dq_array())
+            np.testing.assert_array_almost_equal((self.random_dq/self.unit_dq).dq_array(),
+                                                 self.random_dq.dq_array())
         except AssertionError as e:
             self.fail(e)
 
@@ -116,7 +116,7 @@ class TestDualQuaternion(TestCase):
         dq_2_1 = DualQuaternion.from_homogeneous_matrix(T_2_1)
 
         try:
-            np.testing.assert_array_almost_equal(dq_2_1.homogeneous_matrix, dq_1_2.inverse().homogeneous_matrix)
+            np.testing.assert_array_almost_equal(dq_2_1.homogeneous_matrix(), dq_1_2.inverse().homogeneous_matrix())
         except AssertionError as e:
             self.fail(e)
 
@@ -134,17 +134,17 @@ class TestDualQuaternion(TestCase):
         dq_pure_rot.q_r = - dq_pure_rot.q_r
         dq_pure_rot.q_d = - dq_pure_rot.q_d
         try:
-            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix(), T_pure_rot)
         except AssertionError as e:
             self.fail(e)
         dq_pure_rot.q_d = - dq_pure_rot.q_d
         try:
-            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix(), T_pure_rot)
         except AssertionError as e:
             self.fail(e)
         dq_pure_rot.q_r = - dq_pure_rot.q_r
         try:
-            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix, T_pure_rot)
+            np.testing.assert_array_almost_equal(dq_pure_rot.homogeneous_matrix(), T_pure_rot)
         except AssertionError as e:
             self.fail(e)
 
@@ -160,7 +160,7 @@ class TestDualQuaternion(TestCase):
 
     def test_normalize(self):
         self.assertTrue(self.unit_dq.is_unit())
-        self.assertEqual(self.unit_dq.normalized, self.unit_dq)
+        self.assertEqual(self.unit_dq.normalized(), self.unit_dq)
         unnormalized_dq = DualQuaternion.from_quat_pose_array([1, 2, 3, 4, 5, 6, 7])
         unnormalized_dq.normalize()  # now normalized!
         self.assertTrue(unnormalized_dq.is_unit())
