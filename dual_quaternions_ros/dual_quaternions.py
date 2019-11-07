@@ -43,7 +43,7 @@ class DualQuaternion(object):
 
     def __str__(self):
         return "rotation: {}, translation: {}, \n".format(repr(self.q_r), repr(self.q_d)) + \
-               "translation vector: {}".format(repr(self.translation))
+               "translation vector: {}".format(repr(self.translation()))
 
     def __repr__(self):
         return "<DualQuaternion: {0} + {1}e>".format(repr(self.q_r), repr(self.q_d))
@@ -123,7 +123,7 @@ class DualQuaternion(object):
         dq_point = DualQuaternion.from_translation_vector(point_xyz)
         transformed_dq = self * dq_point
 
-        return transformed_dq.translation
+        return transformed_dq.translation()
 
     def transform_pose(self, pose):
         """
@@ -140,7 +140,7 @@ class DualQuaternion(object):
         dq_pose = DualQuaternion.from_ros_pose(pose)
         transformed_dq = self * dq_pose
 
-        return transformed_dq.ros_pose
+        return transformed_dq.ros_pose()
 
     @classmethod
     def from_dq_array(cls, r_wxyz_t_wxyz):
@@ -245,7 +245,7 @@ class DualQuaternion(object):
 
         Modifies in place, so this will not preserve self
         """
-        normalized = self.normalized
+        normalized = self.normalized()
         self.q_r = normalized.q_r
         self.q_d = normalized.q_d
 
@@ -267,7 +267,7 @@ class DualQuaternion(object):
         :raises IOError: when the path does not exist
         """
         with open(path, 'w') as outfile:
-            json.dump(self.as_dict, outfile)
+            json.dump(self.as_dict(), outfile)
 
     @classmethod
     def from_file(cls, path):
@@ -278,7 +278,6 @@ class DualQuaternion(object):
         return cls.from_dq_array([qdict['r_w'], qdict['r_x'], qdict['r_y'], qdict['r_z'],
                                   qdict['d_w'], qdict['d_x'], qdict['d_y'], qdict['d_z']])
 
-    @property
     def homogeneous_matrix(self):
         """Homogeneous 4x4 transformation matrix from the dual quaternion
 
@@ -287,16 +286,15 @@ class DualQuaternion(object):
         homogeneous_mat = np.zeros([4, 4])
         rot_mat = quaternion.as_rotation_matrix(self.q_r)
         homogeneous_mat[:3, :3] = rot_mat
-        homogeneous_mat[:3, 3] = np.array(self.translation)
+        homogeneous_mat[:3, 3] = np.array(self.translation())
         homogeneous_mat[3, 3] = 1.
 
         return homogeneous_mat
 
-    @property
     def ros_pose(self):
         """ROS geometry_msgs.msg.Pose instance"""
         pose_msg = geometry_msgs.msg.Pose()
-        quat_pose_arr = self.quat_pose_array
+        quat_pose_arr = self.quat_pose_array()
         rot = quat_pose_arr[:4]
         tra = quat_pose_arr[4:]
         pose_msg.position = geometry_msgs.msg.Point(*tra)
@@ -305,11 +303,10 @@ class DualQuaternion(object):
 
         return pose_msg
 
-    @property
     def ros_transform(self):
         """ROS geometry_msgs.msg.Transform instance"""
         transform_msg = geometry_msgs.msg.Transform()
-        quat_pose_arr = self.quat_pose_array
+        quat_pose_arr = self.quat_pose_array()
         rot = quat_pose_arr[:4]
         tra = quat_pose_arr[4:]
         transform_msg.translation = geometry_msgs.msg.Vector3(*tra)
@@ -318,16 +315,14 @@ class DualQuaternion(object):
 
         return transform_msg
 
-    @property
     def quat_pose_array(self):
         """
         Get the list version of the dual quaternion as a quaternion followed by the translation vector
 
         :return: list [q_w, q_x, q_y, q_z, x, y, z]
         """
-        return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z] + self.translation
+        return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z] + self.translation()
 
-    @property
     def dq_array(self):
         """
         Get the list version of the dual quaternion as the rotation quaternion followed by the translation quaternion
@@ -337,7 +332,6 @@ class DualQuaternion(object):
         return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z,
                 self.q_d.w, self.q_d.x, self.q_d.y, self.q_d.z]
 
-    @property
     def translation(self):
         """Get the translation component of the dual quaternion in vector form
 
@@ -347,18 +341,15 @@ class DualQuaternion(object):
 
         return [mult.x, mult.y, mult.z]
 
-    @property
     def normalized(self):
         """Return a copy of the normalized quaternion rotation"""
         return DualQuaternion(self.q_r.normalized(), self.q_d)
 
-    @property
     def as_dict(self):
         """dictionary containing the dual quaternion"""
         return {'r_w': self.q_r.w, 'r_x': self.q_r.x, 'r_y': self.q_r.y, 'r_z': self.q_r.z,
                 'd_w': self.q_d.w, 'd_x': self.q_d.x, 'd_y': self.q_d.y, 'd_z': self.q_d.z}
 
-    @property
     def skew(self):
         """
         TODO
