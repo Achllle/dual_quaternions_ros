@@ -108,39 +108,19 @@ class DualQuaternion(object):
 
     def transform_point(self, point_xyz):
         """
-        Apply the transformation to a given vector.
+        Convenience function to apply the transformation to a given vector.
+        dual quaternion way of applying a rotation and translation using matrices Rv + t or H[v; 1]
+        This works out to be: sigma @ (1 + ev) @ sigma.combined_conjugate() which can be simplified
+        to be 1 + eps(rvr* + t) with r = self.q_r and t = 2*self.q_d*self.q_r.conjugate()
 
         Does not check frames - make sure you do this yourself.
         :param point_xyz: list or np.array in order: [x y z]
         :return: vector of length 3
         """
-        # dq_point = DualQuaternion.identity()
-        # dq_point.q_d = np.quaternion(0., point_xyz[0], point_xyz[1], point_xyz[2])
-        # transformed_dq = (self * dq_point) * (self.conjugate())
-        # return [transformed_dq.q_d.x, transformed_dq.q_d.y, transformed_dq.q_d.z]
+        quat_point = np.quaternion(0, point_xyz[0], point_xyz[1], point_xyz[2])
+        transformed_quat = self.q_r * quat_point * self.q_r.conjugate() + 2 * self.q_d * self.q_r.conjugate()
 
-        # this works, but not mathematically elegant (?)
-        dq_point = DualQuaternion.from_translation_vector(point_xyz)
-        transformed_dq = self * dq_point
-
-        return transformed_dq.translation()
-
-    def transform_pose(self, pose):
-        """
-        Apply the transformation to a give pose.
-
-        Example:
-        >>> pose_in_b = geometry_msgs.msg.Pose(...)
-        >>> T_a_b = DualQuaternion(...)
-        >>> pose_in_a = T_a_b.transform_pose(pose_in_b)
-
-        :param pose: geometry_msgs.msg.Pose
-        :return: geometry_msgs.msg.Pose
-        """
-        dq_pose = DualQuaternion.from_ros_pose(pose)
-        transformed_dq = self * dq_pose
-
-        return transformed_dq.ros_pose()
+        return [transformed_quat.x, transformed_quat.y, transformed_quat.z]
 
     @classmethod
     def from_dq_array(cls, r_wxyz_t_wxyz):
