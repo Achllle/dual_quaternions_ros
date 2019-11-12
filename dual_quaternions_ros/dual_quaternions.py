@@ -100,8 +100,8 @@ class DualQuaternion(object):
         return DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
 
     def __eq__(self, other):
-        return (self.q_r == other.q_r or self.q_r == -other.q_r) \
-               and (self.q_d == other.q_d or self.q_d == -other.q_d)
+        return (np.isclose(self.q_r, other.q_r) or np.isclose(self.q_r, -other.q_r)) \
+               and (np.isclose(self.q_d, other.q_d) or np.isclose(self.q_d, -other.q_d))
 
     def __ne__(self, other):
         return not self == other
