@@ -110,17 +110,21 @@ class DualQuaternion(object):
         """
         Convenience function to apply the transformation to a given vector.
         dual quaternion way of applying a rotation and translation using matrices Rv + t or H[v; 1]
-        This works out to be: sigma @ (1 + ev) @ sigma.combined_conjugate() which can be simplified
-        to be 1 + eps(rvr* + t) with r = self.q_r and t = 2*self.q_d*self.q_r.conjugate()
+        This works out to be: sigma @ (1 + ev) @ sigma.combined_conjugate()
+
+        If we write self = p + eq, this can be expanded to 1 + eps(rvr* + t)
+        with r = p and t = 2qp* which should remind you of Rv + t and the quaternion
+        transform_point() equivalent (rvr*)
 
         Does not check frames - make sure you do this yourself.
         :param point_xyz: list or np.array in order: [x y z]
         :return: vector of length 3
         """
-        quat_point = np.quaternion(0, point_xyz[0], point_xyz[1], point_xyz[2])
-        transformed_quat = self.q_r * quat_point * self.q_r.conjugate() + 2 * self.q_d * self.q_r.conjugate()
-
-        return [transformed_quat.x, transformed_quat.y, transformed_quat.z]
+        dq_point = DualQuaternion.from_dq_array([1, 0, 0, 0,
+                                                 0, point_xyz[0], point_xyz[1], point_xyz[2]])
+        res_dq = self * dq_point * self.combined_conjugate()
+        
+        return res_dq.dq_array()[5:]
 
     @classmethod
     def from_dq_array(cls, r_wxyz_t_wxyz):
