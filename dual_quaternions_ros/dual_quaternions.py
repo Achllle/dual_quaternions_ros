@@ -100,8 +100,8 @@ class DualQuaternion(object):
         return DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
 
     def __eq__(self, other):
-        return (self.q_r == other.q_r or self.q_r == -other.q_r) \
-               and (self.q_d == other.q_d or self.q_d == -other.q_d)
+        return (np.isclose(self.q_r, other.q_r) or np.isclose(self.q_r, -other.q_r)) \
+               and (np.isclose(self.q_d, other.q_d) or np.isclose(self.q_d, -other.q_d))
 
     def __ne__(self, other):
         return not self == other
@@ -193,7 +193,8 @@ class DualQuaternion(object):
     @classmethod
     def from_quat_pose_array(cls, r_wxyz_t_xyz):
         """
-        Create a DualQuaternion object from an array
+        Create a DualQuaternion object from an array of a quaternion r and translation t
+        sigma = r + eps/2 * t * r
 
         :param r_wxyz_t_xyz: list or np.array in order: [q_rw, q_rx, q_ry, q_rz, tx, ty, tz]
         """
@@ -214,27 +215,39 @@ class DualQuaternion(object):
     def identity(cls):
         return cls(quaternion.one, np.quaternion(0., 0., 0., 0.))
 
-    def conjugate(self):
+    def quaternion_conjugate(self):
         """
         Return the individual quaternion conjugates (qr, qd)* = (qr*, qd*)
 
-        This is equivalent to inverse of a homogeneous matrix. See also DualQuaternion.dual_conjugate().
+        This is equivalent to inverse of a homogeneous matrix.
+        See also DualQuaternion.dual_conjugate() and DualQuaternion.combined_conjugate().
         """
         return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
 
-    def dual_conjugate(self):
+    def dual_number_conjugate(self):
         """
-        Return the dual quaternion conjugate ( qr + eps*qd )* = ( qr - eps*qd )
+        Return the dual number conjugate (qr, qd)* = (qr, -qd)
 
-        This is the mathematical conjugate. See also DualQuaternion.conjugate()
+        This form of conjugate is seldom used.
+        See also DualQuaternion.quaternion_conjugate() and DualQuaternion.combined_conjugate().
         """
         return DualQuaternion(self.q_r, -self.q_d)
+
+    def combined_conjugate(self):
+        """
+        Return the combination of the quaternion conjugate and dual number conjugate
+        (qr, qd)* = (qr*, -qd*)
+
+        This form is commonly used to transform a point
+        See also DualQuaternion.dual_number_conjugate() and DualQuaternion.quaternion_conjugate().
+        """
+        return DualQuaternion(self.q_r.conjugate(), -self.q_d.conjugate())
 
     def inverse(self):
         """
         Return the dual quaternion inverse
 
-        For unit dual quaternions dq.inverse() = dq.conjugate()
+        For unit dual quaternions dq.inverse() = dq.quaternion_conjugate()
         """
         q_r_inv = self.q_r.inverse()
         return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
@@ -318,6 +331,8 @@ class DualQuaternion(object):
     def quat_pose_array(self):
         """
         Get the list version of the dual quaternion as a quaternion followed by the translation vector
+        given a dual quaternion p + eq, the rotation in quaternion form is p and the translation in
+        quaternion form is 2qp*
 
         :return: list [q_w, q_x, q_y, q_z, x, y, z]
         """

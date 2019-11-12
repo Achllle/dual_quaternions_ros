@@ -12,6 +12,7 @@ class TestDualQuaternion(TestCase):
     def setUp(self):
         self.unit_dq = DualQuaternion.identity()
         self.random_dq = DualQuaternion.from_dq_array(np.array([1,2,3,4,5,6,7,8]))
+        self.other_random_dq = DualQuaternion.from_dq_array(np.array([0.2,0.1,0.3,0.07,1.2,0.9,3]))
         self.normalized_dq = self.random_dq.normalized()
 
     def test_creation(self):
@@ -153,10 +154,30 @@ class TestDualQuaternion(TestCase):
         self.assertTrue(isinstance(repr(self.unit_dq), basestring))
         self.assertTrue(isinstance(self.unit_dq.__str__(), basestring))
 
-    def test_conjugate(self):
-        dq = self.normalized_dq * self.normalized_dq.conjugate()
-        # a normalized quaternion multiplied with its conjugate should yield unit rotation
+    def test_quaternion_conjugate(self):
+        dq = self.normalized_dq * self.normalized_dq.quaternion_conjugate()
+        # a normalized quaternion multiplied with its quaternion conjugate should yield unit rotation
         self.assertAlmostEqual(dq.q_r, quaternion.one)
+        # (dq1 @ dq2)* ?= dq2* @ dq1*
+        res1 = (self.random_dq * self.other_random_dq).quaternion_conjugate()
+        res2 = self.other_random_dq.quaternion_conjugate() * self.random_dq.quaternion_conjugate()
+        self.assertTrue(res1 == res2)
+
+    def test_dual_number_conjugate(self):
+        # dual number conjugate doesn't behave as you would expect given its special definition
+        # (dq1 @ dq2)* ?= dq1* @ dq2*  This is a different order than the other conjugates!
+        res1 = (self.random_dq * self.other_random_dq).dual_number_conjugate()
+        res2 = self.random_dq.dual_number_conjugate() * self.other_random_dq.dual_number_conjugate()
+        self.assertTrue(res1 == res2)
+
+    def test_combined_conjugate(self):
+        dq = self.normalized_dq * self.normalized_dq.combined_conjugate()
+        # a normalized quaternion multiplied with its combined conjugate should yield unit rotation
+        self.assertAlmostEqual(dq.q_r, quaternion.one)
+        # (dq1 @ dq2)* ?= dq2* @ dq1*
+        res1 = (self.random_dq * self.other_random_dq).combined_conjugate()
+        res2 = self.other_random_dq.combined_conjugate() * self.random_dq.combined_conjugate()
+        self.assertTrue(res1 == res2)
 
     def test_normalize(self):
         self.assertTrue(self.unit_dq.is_unit())
