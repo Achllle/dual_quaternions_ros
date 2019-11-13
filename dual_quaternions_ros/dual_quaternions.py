@@ -108,39 +108,23 @@ class DualQuaternion(object):
 
     def transform_point(self, point_xyz):
         """
-        Apply the transformation to a given vector.
+        Convenience function to apply the transformation to a given vector.
+        dual quaternion way of applying a rotation and translation using matrices Rv + t or H[v; 1]
+        This works out to be: sigma @ (1 + ev) @ sigma.combined_conjugate()
+
+        If we write self = p + eq, this can be expanded to 1 + eps(rvr* + t)
+        with r = p and t = 2qp* which should remind you of Rv + t and the quaternion
+        transform_point() equivalent (rvr*)
 
         Does not check frames - make sure you do this yourself.
         :param point_xyz: list or np.array in order: [x y z]
         :return: vector of length 3
         """
-        # dq_point = DualQuaternion.identity()
-        # dq_point.q_d = np.quaternion(0., point_xyz[0], point_xyz[1], point_xyz[2])
-        # transformed_dq = (self * dq_point) * (self.conjugate())
-        # return [transformed_dq.q_d.x, transformed_dq.q_d.y, transformed_dq.q_d.z]
-
-        # this works, but not mathematically elegant (?)
-        dq_point = DualQuaternion.from_translation_vector(point_xyz)
-        transformed_dq = self * dq_point
-
-        return transformed_dq.translation()
-
-    def transform_pose(self, pose):
-        """
-        Apply the transformation to a give pose.
-
-        Example:
-        >>> pose_in_b = geometry_msgs.msg.Pose(...)
-        >>> T_a_b = DualQuaternion(...)
-        >>> pose_in_a = T_a_b.transform_pose(pose_in_b)
-
-        :param pose: geometry_msgs.msg.Pose
-        :return: geometry_msgs.msg.Pose
-        """
-        dq_pose = DualQuaternion.from_ros_pose(pose)
-        transformed_dq = self * dq_pose
-
-        return transformed_dq.ros_pose()
+        dq_point = DualQuaternion.from_dq_array([1, 0, 0, 0,
+                                                 0, point_xyz[0], point_xyz[1], point_xyz[2]])
+        res_dq = self * dq_point * self.combined_conjugate()
+        
+        return res_dq.dq_array()[5:]
 
     @classmethod
     def from_dq_array(cls, r_wxyz_t_wxyz):
