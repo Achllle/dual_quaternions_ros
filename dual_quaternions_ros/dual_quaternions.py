@@ -40,6 +40,8 @@ class DualQuaternion(object):
                 type(q_r), type(q_d)))
         self.q_r = q_r.normalized()
         self.q_d = q_d
+        if not self.is_normalized():
+            raise AttributeError("Unnormalized dual quaternion provided: {}".format(self))
 
     def __str__(self):
         return "rotation: {}, translation: {}, \n".format(repr(self.q_r), repr(self.q_d)) + \
@@ -182,7 +184,7 @@ class DualQuaternion(object):
 
         :param r_wxyz_t_xyz: list or np.array in order: [q_rw, q_rx, q_ry, q_rz, tx, ty, tz]
         """
-        q_r = np.quaternion(*r_wxyz_t_xyz[:4])
+        q_r = np.quaternion(*r_wxyz_t_xyz[:4]).normalized()
         q_d = 0.5 * np.quaternion(0., *r_wxyz_t_xyz[4:]) * q_r
 
         return cls(q_r, q_d)
@@ -203,7 +205,8 @@ class DualQuaternion(object):
         """
         Return the individual quaternion conjugates (qr, qd)* = (qr*, qd*)
 
-        This is equivalent to inverse of a homogeneous matrix.
+        This is equivalent to inverse of a homogeneous matrix. It is used in applying
+        a transformation to a line expressed in Plucker coordinates.
         See also DualQuaternion.dual_conjugate() and DualQuaternion.combined_conjugate().
         """
         return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
@@ -236,6 +239,12 @@ class DualQuaternion(object):
         q_r_inv = self.q_r.inverse()
         return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
 
+    def is_normalized(self):
+        """Check if the dual quaternion is normalized"""
+        rot_normalized = np.isclose(self.q_r.norm(), 1)
+        trans_normalized = np.isclose(self.q_d / self.q_r.norm(), self.q_d)
+        return rot_normalized and trans_normalized
+
     def normalize(self):
         """
         Normalize this dual quaternion
@@ -245,10 +254,6 @@ class DualQuaternion(object):
         normalized = self.normalized()
         self.q_r = normalized.q_r
         self.q_d = normalized.q_d
-
-    def is_unit(self):
-        """True if the norm of the rotation part of the dual quaternion is 1"""
-        return np.allclose(self.q_r.norm(), 1.0)
 
     def slerp(self, other, t):
         """Spherical Linear Interpolation"""
@@ -341,8 +346,9 @@ class DualQuaternion(object):
         return [mult.x, mult.y, mult.z]
 
     def normalized(self):
-        """Return a copy of the normalized quaternion rotation"""
-        return DualQuaternion(self.q_r.normalized(), self.q_d)
+        """Return a copy of the normalized dual quaternion"""
+        norm_qr = self.q_r.norm()
+        return DualQuaternion(self.q_r/norm_qr, self.q_d/norm_qr)
 
     def as_dict(self):
         """dictionary containing the dual quaternion"""
