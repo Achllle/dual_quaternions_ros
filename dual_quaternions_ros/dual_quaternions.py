@@ -382,6 +382,7 @@ class DualQuaternion(object):
             d = np.dot(t, l)
 
             # m is a bit more complicated. Derivation see K. Daniliidis, Hand-eye calibration using Dual Quaternions
+            #TODO this doesn't seem to yield correct results?! Only works in subset of cases.
             m = 0.5 * (np.cross(t, l) + np.cross(l, np.cross(t, l) / np.tan(theta / 2)))
         else:
             # l points along the translation axis
@@ -405,6 +406,8 @@ class DualQuaternion(object):
         :param d:
         :return:
         """
+        theta = float(theta)
+        d = float(d)
         q_r = np.quaternion(np.cos(theta/2), 0, 0, 0)
         q_r.vec = np.sin(theta/2) * l
         q_d = np.quaternion(-d/2 * np.sin(theta/2), 0, 0, 0)
