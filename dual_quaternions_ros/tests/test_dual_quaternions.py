@@ -262,8 +262,8 @@ class TestDualQuaternion(TestCase):
         # along -x. Rotate around z axis so that the coordinate system stays in the plane. Translate along z-axis
         theta2 = np.pi/4
         dq_rot2 = DualQuaternion.from_dq_array([np.cos(theta2 / 2), 0, 0, np.sin(theta2 / 2), 0, 0, 0, 0])
-        dist_axis = 5
-        displacement_z = 3
+        dist_axis = 5.
+        displacement_z = 3.
         dq_trans = DualQuaternion.from_translation_vector([-dist_axis, dist_axis, displacement_z])
         dq_comb = dq_trans * dq_rot2
         l, m, theta, d = dq_comb.screw()
@@ -271,7 +271,6 @@ class TestDualQuaternion(TestCase):
             # the direction of the axis should align with the z axis of the origin
             np.testing.assert_array_almost_equal(l, np.array([0, 0, 1]), decimal=3)
             # m = p x l with p any point on the line
-            # self.assertAlmostEqual(np.sum(m), dist_axis)
             np.testing.assert_array_almost_equal(np.cross(np.array([[-dist_axis, 0, 0]]), l).flatten(), m)
         except AssertionError as e:
             self.fail(e)
@@ -282,7 +281,7 @@ class TestDualQuaternion(TestCase):
         l = np.array([0, 0, 1])
         m = np.cross(np.array([0, 1, 0]), l)
         theta = np.pi/4
-        d = 1
+        d = 3.
         dq = DualQuaternion.from_screw(l, m, theta, d)
         lr, mr, thetar, dr = dq.screw()
         try:
