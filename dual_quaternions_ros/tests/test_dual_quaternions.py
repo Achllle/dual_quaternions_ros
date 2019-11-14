@@ -239,6 +239,45 @@ class TestDualQuaternion(TestCase):
         except AssertionError as e:
             self.fail(e)
 
+    def test_screw(self):
+        # test unit
+        l, m, theta, d = self.unit_dq.screw()
+        self.assertEqual(d, 0)
+        self.assertEqual(theta, 0)
+
+        # test pure translation
+        trans = [10, 5, 0]
+        dq_trans = DualQuaternion.from_translation_vector(trans)
+        l, m, theta, d = dq_trans.screw()
+        self.assertAlmostEqual(d, np.linalg.norm(trans), 2)
+        self.assertAlmostEqual(theta, 0)
+
+        # test pure rotation
+        theta1 = np.pi/2
+        dq_rot = DualQuaternion.from_dq_array([np.cos(theta1 / 2), np.sin(theta1 / 2), 0, 0, 0, 0, 0, 0])
+        l, m, theta, d = dq_rot.screw()
+        self.assertAlmostEqual(theta, theta1)
+
+        # test simple rotation and translation: rotate in the plane of a coordinate system with the screw axis offset
+        # along -x. Rotate around z axis so that the coordinate system stays in the plane. Translate along z-axis
+        theta2 = np.pi/2
+        dq_rot2 = DualQuaternion.from_dq_array([np.cos(theta2 / 2), 0, 0, np.sin(theta2 / 2), 0, 0, 0, 0])
+        dist_axis = 5
+        displacement_z = 3
+        dq_trans = DualQuaternion.from_translation_vector([-dist_axis, dist_axis, displacement_z])
+        dq_comb = dq_trans * dq_rot2
+        l, m, theta, d = dq_comb.screw()
+        try:
+            # the direction of the axis should align with the z axis of the origin
+            np.testing.assert_array_almost_equal(l, np.array([0, 0, 1]), decimal=3)
+            # m = p x l with p any point on the line
+            # self.assertAlmostEqual(np.sum(m), dist_axis)
+            np.testing.assert_array_almost_equal(np.cross(np.array([[-dist_axis, 0, 0]]), l).flatten(), m)
+        except AssertionError as e:
+            self.fail(e)
+        self.assertAlmostEqual(d, displacement_z)  # only displacement along z should exist here
+        self.assertAlmostEqual(theta, theta2)  # the angles should be the same
+
     def test_saving_loading(self):
         # get the cwd so we can create a couple test files that we'll remove later
         dir = os.getcwd()
