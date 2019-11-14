@@ -260,7 +260,7 @@ class TestDualQuaternion(TestCase):
 
         # test simple rotation and translation: rotate in the plane of a coordinate system with the screw axis offset
         # along -x. Rotate around z axis so that the coordinate system stays in the plane. Translate along z-axis
-        theta2 = np.pi/2
+        theta2 = np.pi/4
         dq_rot2 = DualQuaternion.from_dq_array([np.cos(theta2 / 2), 0, 0, np.sin(theta2 / 2), 0, 0, 0, 0])
         dist_axis = 5
         displacement_z = 3
