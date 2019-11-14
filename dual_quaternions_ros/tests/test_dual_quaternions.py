@@ -278,6 +278,21 @@ class TestDualQuaternion(TestCase):
         self.assertAlmostEqual(d, displacement_z)  # only displacement along z should exist here
         self.assertAlmostEqual(theta, theta2)  # the angles should be the same
 
+    def test_from_screw(self):
+        l = np.array([0, 0, 1])
+        m = np.cross(np.array([0, 1, 0]), l)
+        theta = np.pi/4
+        d = 1
+        dq = DualQuaternion.from_screw(l, m, theta, d)
+        lr, mr, thetar, dr = dq.screw()
+        try:
+            np.testing.assert_array_almost_equal(l, lr, decimal=3)
+            np.testing.assert_array_almost_equal(m, mr, decimal=3)
+        except AssertionError as e:
+            self.fail(e)
+        self.assertAlmostEqual(theta, thetar)
+        self.assertAlmostEqual(d, dr)
+
     def test_saving_loading(self):
         # get the cwd so we can create a couple test files that we'll remove later
         dir = os.getcwd()
