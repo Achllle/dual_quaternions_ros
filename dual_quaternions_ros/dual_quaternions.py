@@ -371,7 +371,6 @@ class DualQuaternion(object):
         """
         # start by extracting theta and l directly from the real part of the dual quaternion
         theta = self.q_r.angle()
-        # TODO deal with theta ~= pi
         theta_close_to_zero = np.isclose(theta, 0)
         t = np.array(self.translation())
 
@@ -382,7 +381,6 @@ class DualQuaternion(object):
             d = np.dot(t, l)
 
             # m is a bit more complicated. Derivation see K. Daniliidis, Hand-eye calibration using Dual Quaternions
-            #TODO this doesn't seem to yield correct results?! Only works in subset of cases.
             m = 0.5 * (np.cross(t, l) + np.cross(l, np.cross(t, l) / np.tan(theta / 2)))
         else:
             # l points along the translation axis
