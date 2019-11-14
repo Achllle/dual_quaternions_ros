@@ -359,8 +359,8 @@ class DualQuaternion(object):
     def screw(self):
         """
         Get the screw parameters for this dual quaternion.
-        Chasles' theorem (screw theorem) states that any rigid displacement is equivalent to a rotation about some
-        line and a translation in the direction of the line. This line does not go through the origin!
+        Chasles' theorem (Mozzi, screw theorem) states that any rigid displacement is equivalent to a rotation about
+        some line and a translation in the direction of the line. This line does not go through the origin!
         This function returns the Plucker coordinates for the screw axis (l, m) as well as the amount of rotation
         and translation, theta and d.
         If the dual quaternion represents a pure translation, theta will be zero and the screw moment m will be at
@@ -398,11 +398,10 @@ class DualQuaternion(object):
         """
         Create a DualQuaternion from screw parameters
 
-        :param l:
-        :param m:
-        :param theta:
-        :param d:
-        :return:
+        :param l: unit vector defining screw axis direction
+        :param m: screw axis moment, perpendicular to l and through the origin
+        :param theta: screw angle; rotation around the screw axis
+        :param d: displacement along the screw axis
         """
         theta = float(theta)
         d = float(d)
