@@ -403,6 +403,11 @@ class DualQuaternion(object):
         :param theta: screw angle; rotation around the screw axis
         :param d: displacement along the screw axis
         """
+        l = np.array(l)
+        m = np.array(m)
+        if not np.isclose(np.linalg.norm(l), 1):
+            raise AttributeError("Expected l to be a unit vector, received {} with norm {} instead"
+                                 .format(l, np.linalg.norm(l)))
         theta = float(theta)
         d = float(d)
         q_r = np.quaternion(np.cos(theta/2), 0, 0, 0)
