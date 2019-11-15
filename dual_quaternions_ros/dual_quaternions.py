@@ -29,6 +29,7 @@ class DualQuaternion(object):
     $ dq = DualQuaternion.from_quat_pose_array([q_w, q_x, q_y, q_z, x, y, z])
     $ dq = DualQuaternion.from_translation_vector([x y z])
     $ dq = DualQuaternion.identity() --> zero translation, unit rotation
+    $ dq = DualQuaternion.from_screw([lx, ly, lz], [mx, my, mz], theta, d)
 
     The underlying representation for a single quaternion uses the format [w x y z]
     The rotation part (non-dual) will always be normalized.
@@ -354,6 +355,67 @@ class DualQuaternion(object):
         """dictionary containing the dual quaternion"""
         return {'r_w': self.q_r.w, 'r_x': self.q_r.x, 'r_y': self.q_r.y, 'r_z': self.q_r.z,
                 'd_w': self.q_d.w, 'd_x': self.q_d.x, 'd_y': self.q_d.y, 'd_z': self.q_d.z}
+
+    def screw(self):
+        """
+        Get the screw parameters for this dual quaternion.
+        Chasles' theorem (Mozzi, screw theorem) states that any rigid displacement is equivalent to a rotation about
+        some line and a translation in the direction of the line. This line does not go through the origin!
+        This function returns the Plucker coordinates for the screw axis (l, m) as well as the amount of rotation
+        and translation, theta and d.
+        If the dual quaternion represents a pure translation, theta will be zero and the screw moment m will be at
+        infinity.
+
+        :return: l (unit length), m, theta, d
+        :rtype np.array(3), np.array(3), float, float
+        """
+        # start by extracting theta and l directly from the real part of the dual quaternion
+        theta = self.q_r.angle()
+        theta_close_to_zero = np.isclose(theta, 0)
+        t = np.array(self.translation())
+
+        if not theta_close_to_zero:
+            l = self.q_r.vec / np.sin(theta/2)  # since q_r is normalized, l should be normalized too
+
+            # displacement d along the line is the projection of the translation onto the line l
+            d = np.dot(t, l)
+
+            # m is a bit more complicated. Derivation see K. Daniliidis, Hand-eye calibration using Dual Quaternions
+            m = 0.5 * (np.cross(t, l) + np.cross(l, np.cross(t, l) / np.tan(theta / 2)))
+        else:
+            # l points along the translation axis
+            d = np.linalg.norm(t)
+            if not np.isclose(d, 0):  # unit transformation
+                l = t / d
+            else:
+                l = (0, 0, 0)
+            m = np.array([np.inf, np.inf, np.inf])
+
+        return l, m, theta, d
+
+    @classmethod
+    def from_screw(cls, l, m, theta, d):
+        """
+        Create a DualQuaternion from screw parameters
+
+        :param l: unit vector defining screw axis direction
+        :param m: screw axis moment, perpendicular to l and through the origin
+        :param theta: screw angle; rotation around the screw axis
+        :param d: displacement along the screw axis
+        """
+        l = np.array(l)
+        m = np.array(m)
+        if not np.isclose(np.linalg.norm(l), 1):
+            raise AttributeError("Expected l to be a unit vector, received {} with norm {} instead"
+                                 .format(l, np.linalg.norm(l)))
+        theta = float(theta)
+        d = float(d)
+        q_r = np.quaternion(np.cos(theta/2), 0, 0, 0)
+        q_r.vec = np.sin(theta/2) * l
+        q_d = np.quaternion(-d/2 * np.sin(theta/2), 0, 0, 0)
+        q_d.vec = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
+
+        return cls(q_r, q_d)
 
     def skew(self):
         """
