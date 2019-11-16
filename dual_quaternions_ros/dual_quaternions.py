@@ -6,7 +6,6 @@ License: MIT
 """
 import numpy as np
 import quaternion
-import warnings
 import json
 
 import geometry_msgs.msg
@@ -30,23 +29,24 @@ class DualQuaternion(object):
     $ dq = DualQuaternion.from_quat_pose_array([q_w, q_x, q_y, q_z, x, y, z])
     $ dq = DualQuaternion.from_translation_vector([x y z])
     $ dq = DualQuaternion.identity() --> zero translation, unit rotation
+    $ dq = DualQuaternion.from_screw([lx, ly, lz], [mx, my, mz], theta, d)
 
     The underlying representation for a single quaternion uses the format [w x y z]
-
-    Inspired by 'A Beginners Guide to Dual-Quaternions' by Ben Kenwright and the dual quaternion
-    implementation of the hand_eye_calibration package from ethz-asl
+    The rotation part (non-dual) will always be normalized.
     """
 
     def __init__(self, q_r, q_d):
         if not isinstance(q_r, np.quaternion) or not isinstance(q_d, np.quaternion):
             raise ValueError("q_r and q_d must be of type np.quaternion. Instead received: {} and {}".format(
                 type(q_r), type(q_d)))
-        self.q_r = q_r
+        self.q_r = q_r.normalized()
         self.q_d = q_d
+        if not self.is_normalized():
+            raise AttributeError("Unnormalized dual quaternion provided: {}".format(self))
 
     def __str__(self):
         return "rotation: {}, translation: {}, \n".format(repr(self.q_r), repr(self.q_d)) + \
-               "translation vector: {}".format(repr(self.translation))
+               "translation vector: {}".format(repr(self.translation()))
 
     def __repr__(self):
         return "<DualQuaternion: {0} + {1}e>".format(repr(self.q_r), repr(self.q_d))
@@ -104,12 +104,10 @@ class DualQuaternion(object):
     def __add__(self, other):
         """
         Dual Quaternion addition.
-        :param other: pure translation dual quaternion
-        :return: DualQuaternion(quaternion.one, self.q_d + other.q_d)
+        :param other: dual quaternion
+        :return: DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
         """
-        if self.q_r != quaternion.one or other.q_r != quaternion.one:
-            warnings.warn('One or both of quaternions passed is not a pure translation!')
-        return DualQuaternion(quaternion.one, self.q_d + other.q_d)
+        return DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
 
     def __eq__(self, other):
         return (np.isclose(self.q_r, other.q_r) or np.isclose(self.q_r, -other.q_r)) \
@@ -120,39 +118,23 @@ class DualQuaternion(object):
 
     def transform_point(self, point_xyz):
         """
-        Apply the transformation to a given vector.
+        Convenience function to apply the transformation to a given vector.
+        dual quaternion way of applying a rotation and translation using matrices Rv + t or H[v; 1]
+        This works out to be: sigma @ (1 + ev) @ sigma.combined_conjugate()
+
+        If we write self = p + eq, this can be expanded to 1 + eps(rvr* + t)
+        with r = p and t = 2qp* which should remind you of Rv + t and the quaternion
+        transform_point() equivalent (rvr*)
 
         Does not check frames - make sure you do this yourself.
         :param point_xyz: list or np.array in order: [x y z]
         :return: vector of length 3
         """
-        # dq_point = DualQuaternion.identity()
-        # dq_point.q_d = np.quaternion(0., point_xyz[0], point_xyz[1], point_xyz[2])
-        # transformed_dq = (self * dq_point) * (self.conjugate())
-        # return [transformed_dq.q_d.x, transformed_dq.q_d.y, transformed_dq.q_d.z]
-
-        # this works, but not mathematically elegant (?)
-        dq_point = DualQuaternion.from_translation_vector(point_xyz)
-        transformed_dq = self * dq_point
-
-        return transformed_dq.translation
-
-    def transform_pose(self, pose):
-        """
-        Apply the transformation to a give pose.
-
-        Example:
-        >>> pose_in_b = geometry_msgs.msg.Pose(...)
-        >>> T_a_b = DualQuaternion(...)
-        >>> pose_in_a = T_a_b.transform_pose(pose_in_b)
-
-        :param pose: geometry_msgs.msg.Pose
-        :return: geometry_msgs.msg.Pose
-        """
-        dq_pose = DualQuaternion.from_ros_pose(pose)
-        transformed_dq = self * dq_pose
-
-        return transformed_dq.ros_pose
+        dq_point = DualQuaternion.from_dq_array([1, 0, 0, 0,
+                                                 0, point_xyz[0], point_xyz[1], point_xyz[2]])
+        res_dq = self * dq_point * self.combined_conjugate()
+        
+        return res_dq.dq_array()[5:]
 
     @classmethod
     def from_dq_array(cls, r_wxyz_t_wxyz):
@@ -205,11 +187,12 @@ class DualQuaternion(object):
     @classmethod
     def from_quat_pose_array(cls, r_wxyz_t_xyz):
         """
-        Create a DualQuaternion object from an array
+        Create a DualQuaternion object from an array of a quaternion r and translation t
+        sigma = r + eps/2 * t * r
 
         :param r_wxyz_t_xyz: list or np.array in order: [q_rw, q_rx, q_ry, q_rz, tx, ty, tz]
         """
-        q_r = np.quaternion(*r_wxyz_t_xyz[:4])
+        q_r = np.quaternion(*r_wxyz_t_xyz[:4]).normalized()
         q_d = 0.5 * np.quaternion(0., *r_wxyz_t_xyz[4:]) * q_r
 
         return cls(q_r, q_d)
@@ -226,24 +209,59 @@ class DualQuaternion(object):
     def identity(cls):
         return cls(quaternion.one, np.quaternion(0., 0., 0., 0.))
 
-    def conjugate(self):
-        """Dual quaternion conjugate"""
+    def quaternion_conjugate(self):
+        """
+        Return the individual quaternion conjugates (qr, qd)* = (qr*, qd*)
+
+        This is equivalent to inverse of a homogeneous matrix. It is used in applying
+        a transformation to a line expressed in Plucker coordinates.
+        See also DualQuaternion.dual_conjugate() and DualQuaternion.combined_conjugate().
+        """
         return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
 
+    def dual_number_conjugate(self):
+        """
+        Return the dual number conjugate (qr, qd)* = (qr, -qd)
+
+        This form of conjugate is seldom used.
+        See also DualQuaternion.quaternion_conjugate() and DualQuaternion.combined_conjugate().
+        """
+        return DualQuaternion(self.q_r, -self.q_d)
+
+    def combined_conjugate(self):
+        """
+        Return the combination of the quaternion conjugate and dual number conjugate
+        (qr, qd)* = (qr*, -qd*)
+
+        This form is commonly used to transform a point
+        See also DualQuaternion.dual_number_conjugate() and DualQuaternion.quaternion_conjugate().
+        """
+        return DualQuaternion(self.q_r.conjugate(), -self.q_d.conjugate())
+
     def inverse(self):
-        """Dual quaternion inverse"""
+        """
+        Return the dual quaternion inverse
+
+        For unit dual quaternions dq.inverse() = dq.quaternion_conjugate()
+        """
         q_r_inv = self.q_r.inverse()
         return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
 
+    def is_normalized(self):
+        """Check if the dual quaternion is normalized"""
+        rot_normalized = np.isclose(self.q_r.norm(), 1)
+        trans_normalized = np.isclose(self.q_d / self.q_r.norm(), self.q_d)
+        return rot_normalized and trans_normalized
+
     def normalize(self):
-        """Normalize dual quaternion"""
-        normalized = self.normalized
+        """
+        Normalize this dual quaternion
+
+        Modifies in place, so this will not preserve self
+        """
+        normalized = self.normalized()
         self.q_r = normalized.q_r
         self.q_d = normalized.q_d
-
-    def is_unit(self):
-        """True if the norm of the rotation part of the dual quaternion is 1"""
-        return np.allclose(self.q_r.norm(), 1.0)
 
     def pow(self, exponent):
         """self^exponent"""
@@ -276,7 +294,7 @@ class DualQuaternion(object):
         :raises IOError: when the path does not exist
         """
         with open(path, 'w') as outfile:
-            json.dump(self.as_dict, outfile)
+            json.dump(self.as_dict(), outfile)
 
     @classmethod
     def from_file(cls, path):
@@ -287,7 +305,6 @@ class DualQuaternion(object):
         return cls.from_dq_array([qdict['r_w'], qdict['r_x'], qdict['r_y'], qdict['r_z'],
                                   qdict['d_w'], qdict['d_x'], qdict['d_y'], qdict['d_z']])
 
-    @property
     def homogeneous_matrix(self):
         """Homogeneous 4x4 transformation matrix from the dual quaternion
 
@@ -296,16 +313,15 @@ class DualQuaternion(object):
         homogeneous_mat = np.zeros([4, 4])
         rot_mat = quaternion.as_rotation_matrix(self.q_r)
         homogeneous_mat[:3, :3] = rot_mat
-        homogeneous_mat[:3, 3] = np.array(self.translation)
+        homogeneous_mat[:3, 3] = np.array(self.translation())
         homogeneous_mat[3, 3] = 1.
 
         return homogeneous_mat
 
-    @property
     def ros_pose(self):
         """ROS geometry_msgs.msg.Pose instance"""
         pose_msg = geometry_msgs.msg.Pose()
-        quat_pose_arr = self.quat_pose_array
+        quat_pose_arr = self.quat_pose_array()
         rot = quat_pose_arr[:4]
         tra = quat_pose_arr[4:]
         pose_msg.position = geometry_msgs.msg.Point(*tra)
@@ -314,11 +330,10 @@ class DualQuaternion(object):
 
         return pose_msg
 
-    @property
     def ros_transform(self):
         """ROS geometry_msgs.msg.Transform instance"""
         transform_msg = geometry_msgs.msg.Transform()
-        quat_pose_arr = self.quat_pose_array
+        quat_pose_arr = self.quat_pose_array()
         rot = quat_pose_arr[:4]
         tra = quat_pose_arr[4:]
         transform_msg.translation = geometry_msgs.msg.Vector3(*tra)
@@ -327,16 +342,16 @@ class DualQuaternion(object):
 
         return transform_msg
 
-    @property
     def quat_pose_array(self):
         """
         Get the list version of the dual quaternion as a quaternion followed by the translation vector
+        given a dual quaternion p + eq, the rotation in quaternion form is p and the translation in
+        quaternion form is 2qp*
 
         :return: list [q_w, q_x, q_y, q_z, x, y, z]
         """
-        return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z] + self.translation
+        return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z] + self.translation()
 
-    @property
     def dq_array(self):
         """
         Get the list version of the dual quaternion as the rotation quaternion followed by the translation quaternion
@@ -346,7 +361,6 @@ class DualQuaternion(object):
         return [self.q_r.w, self.q_r.x, self.q_r.y, self.q_r.z,
                 self.q_d.w, self.q_d.x, self.q_d.y, self.q_d.z]
 
-    @property
     def translation(self):
         """Get the translation component of the dual quaternion in vector form
 
@@ -356,22 +370,77 @@ class DualQuaternion(object):
 
         return [mult.x, mult.y, mult.z]
 
-    @property
     def normalized(self):
-        """
-        Copy of the normalized quaternion rotation
+        """Return a copy of the normalized dual quaternion"""
+        norm_qr = self.q_r.norm()
+        return DualQuaternion(self.q_r/norm_qr, self.q_d/norm_qr)
 
-        :return: dict with keys r_w, r_x, r_y, r_z, d_w, d_x, d_y, d_z
-        """
-        return DualQuaternion(self.q_r.normalized(), self.q_d)
-
-    @property
     def as_dict(self):
         """dictionary containing the dual quaternion"""
         return {'r_w': self.q_r.w, 'r_x': self.q_r.x, 'r_y': self.q_r.y, 'r_z': self.q_r.z,
                 'd_w': self.q_d.w, 'd_x': self.q_d.x, 'd_y': self.q_d.y, 'd_z': self.q_d.z}
 
-    @property
+    def screw(self):
+        """
+        Get the screw parameters for this dual quaternion.
+        Chasles' theorem (Mozzi, screw theorem) states that any rigid displacement is equivalent to a rotation about
+        some line and a translation in the direction of the line. This line does not go through the origin!
+        This function returns the Plucker coordinates for the screw axis (l, m) as well as the amount of rotation
+        and translation, theta and d.
+        If the dual quaternion represents a pure translation, theta will be zero and the screw moment m will be at
+        infinity.
+
+        :return: l (unit length), m, theta, d
+        :rtype np.array(3), np.array(3), float, float
+        """
+        # start by extracting theta and l directly from the real part of the dual quaternion
+        theta = self.q_r.angle()
+        theta_close_to_zero = np.isclose(theta, 0)
+        t = np.array(self.translation())
+
+        if not theta_close_to_zero:
+            l = self.q_r.vec / np.sin(theta/2)  # since q_r is normalized, l should be normalized too
+
+            # displacement d along the line is the projection of the translation onto the line l
+            d = np.dot(t, l)
+
+            # m is a bit more complicated. Derivation see K. Daniliidis, Hand-eye calibration using Dual Quaternions
+            m = 0.5 * (np.cross(t, l) + np.cross(l, np.cross(t, l) / np.tan(theta / 2)))
+        else:
+            # l points along the translation axis
+            d = np.linalg.norm(t)
+            if not np.isclose(d, 0):  # unit transformation
+                l = t / d
+            else:
+                l = (0, 0, 0)
+            m = np.array([np.inf, np.inf, np.inf])
+
+        return l, m, theta, d
+
+    @classmethod
+    def from_screw(cls, l, m, theta, d):
+        """
+        Create a DualQuaternion from screw parameters
+
+        :param l: unit vector defining screw axis direction
+        :param m: screw axis moment, perpendicular to l and through the origin
+        :param theta: screw angle; rotation around the screw axis
+        :param d: displacement along the screw axis
+        """
+        l = np.array(l)
+        m = np.array(m)
+        if not np.isclose(np.linalg.norm(l), 1):
+            raise AttributeError("Expected l to be a unit vector, received {} with norm {} instead"
+                                 .format(l, np.linalg.norm(l)))
+        theta = float(theta)
+        d = float(d)
+        q_r = np.quaternion(np.cos(theta/2), 0, 0, 0)
+        q_r.vec = np.sin(theta/2) * l
+        q_d = np.quaternion(-d/2 * np.sin(theta/2), 0, 0, 0)
+        q_d.vec = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
+
+        return cls(q_r, q_d)
+
     def skew(self):
         """
         TODO
