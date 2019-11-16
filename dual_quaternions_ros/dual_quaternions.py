@@ -35,14 +35,16 @@ class DualQuaternion(object):
     The rotation part (non-dual) will always be normalized.
     """
 
-    def __init__(self, q_r, q_d):
+    def __init__(self, q_r, q_d, normalize=False):
         if not isinstance(q_r, np.quaternion) or not isinstance(q_d, np.quaternion):
             raise ValueError("q_r and q_d must be of type np.quaternion. Instead received: {} and {}".format(
                 type(q_r), type(q_d)))
-        self.q_r = q_r.normalized()
-        self.q_d = q_d
-        if not self.is_normalized():
-            raise AttributeError("Unnormalized dual quaternion provided: {}".format(self))
+        if normalize:
+            self.q_d = q_d / q_r.norm()
+            self.q_r = q_r.normalize()
+        else:
+            self.q_r = q_r
+            self.q_d = q_d
 
     def __str__(self):
         return "rotation: {}, translation: {}, \n".format(repr(self.q_r), repr(self.q_d)) + \
@@ -249,6 +251,8 @@ class DualQuaternion(object):
 
     def is_normalized(self):
         """Check if the dual quaternion is normalized"""
+        if np.isclose(self.q_r.norm(), 0):
+            return True
         rot_normalized = np.isclose(self.q_r.norm(), 1)
         trans_normalized = np.isclose(self.q_d / self.q_r.norm(), self.q_d)
         return rot_normalized and trans_normalized
@@ -277,12 +281,12 @@ class DualQuaternion(object):
     def log(cls, dq):
         q_r = dq.q_r.log()
         q_d = dq.q_r.inverse() * dq.q_d
-        return cls(q_r, q_d)
+        return cls(q_r, q_d, normalize=False)
 
     @classmethod
     def sclerp(cls, start, stop, t):
         """Screw Linear Interpolation"""
-        return (stop * start.conjugate()).pow(t) * start
+        return (stop * start.quaternion_conjugate()).pow(t) * start
 
     def nlerp(self, other, t):
         raise NotImplementedError()
