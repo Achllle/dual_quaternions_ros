@@ -346,11 +346,11 @@ class TestDualQuaternion(TestCase):
 
     def test_sclerp_orientation(self):
         """test Screw Linear Interpolation for diff orientation, same position"""
-        T_id = DualQuaternion.identity().homogeneous_matrix
+        T_id = DualQuaternion.identity().homogeneous_matrix()
         T_id[0:2, 0:2] = np.array([[0, -1], [1, 0]])  # rotate 90 around z
         dq2 = DualQuaternion.from_homogeneous_matrix(T_id)
         interpolated1 = DualQuaternion.sclerp(self.unit_dq, dq2, 0.5)
-        T_exp = DualQuaternion.identity().homogeneous_matrix
+        T_exp = DualQuaternion.identity().homogeneous_matrix()
         sq22 = np.sqrt(2)/2
         T_exp[0:2, 0:2] = np.array([[sq22, -sq22], [sq22, sq22]])  # rotate 45 around z
         expected1 = DualQuaternion.from_homogeneous_matrix(T_exp)
