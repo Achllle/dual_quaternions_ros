@@ -360,3 +360,16 @@ class TestDualQuaternion(TestCase):
         self.assertTrue(interpolated2 == self.unit_dq)
         self.assertTrue(interpolated3 == dq2)
 
+    def test_sclerp_screw(self):
+        """Interpolating with ScLERP should yield same result as interpolating with screw parameters
+        ScLERP is a screw motion interpolation with constant rotation and translation speeds. We can
+        simply interpolate screw parameters theta and d and we should get the same result.
+        """
+        taus = [0., 0.23, 0.6, 1.0]
+        l, m, theta, d = self.normalized_dq.screw()
+        for tau in taus:
+            # interpolate using sclerp
+            interpolated_dq = DualQuaternion.sclerp(self.unit_dq, self.normalized_dq, tau)
+            # interpolate using screw: l and m stay the same, theta and d vary with tau
+            interpolated_dq_screw = DualQuaternion.from_screw(l, m, tau*theta, tau*d)
+            self.assertEqual(interpolated_dq, interpolated_dq_screw)
