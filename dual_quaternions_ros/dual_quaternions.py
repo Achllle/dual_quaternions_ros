@@ -550,11 +550,3 @@ class DualQuaternion(object):
         q_d.vec = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
 
         return cls(q_r, q_d)
-
-    def skew(self):
-        """
-        TODO
-
-        :return:
-        """
-        raise NotImplementedError()
