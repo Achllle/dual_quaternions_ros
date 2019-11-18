@@ -10,6 +10,12 @@ ROS Dual Quaternions
     :alt: GitHub tag (latest SemVer)
     :target: https://GitHub.com/Achllle/dual_quaternions_ros/tags/
 
+.. image:: viz.gif
+    :scale: 50 %
+    :align: center
+    :target: https://gist.github.com/Achllle/c06c7a9b6706d4942fdc2e198119f0a2
+
+
 Why use dual quaternions?
 -------------------------
 
