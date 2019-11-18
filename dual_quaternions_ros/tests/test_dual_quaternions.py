@@ -373,3 +373,12 @@ class TestDualQuaternion(TestCase):
             # interpolate using screw: l and m stay the same, theta and d vary with tau
             interpolated_dq_screw = DualQuaternion.from_screw(l, m, tau*theta, tau*d)
             self.assertEqual(interpolated_dq, interpolated_dq_screw)
+
+    def test_pow(self):
+        expected_result = self.normalized_dq * self.normalized_dq
+        received_result = self.normalized_dq.pow(2)
+        self.assertEqual(received_result, expected_result)
+
+        expected_result = self.random_dq * self.random_dq
+        received_result = self.random_dq.pow(2)
+        self.assertEqual(received_result, expected_result)
