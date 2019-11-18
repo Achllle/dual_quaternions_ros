@@ -26,8 +26,6 @@ Why use dual quaternions?
 * easy normalization. Homogeneous tranformation matrices are orthogonal and due to floating point errors operations on them often result in matrices that need to be renormalized. This can be done using the Gram-Schmidt method but that is a slow algorithm. Quaternion normalization is very fast.
 * mathematically pleasing
 
-Please take a look at the [available methods](dual_quaternions_ros/dual_quaternions.py) to see existing functionality.
-
 NOTE: there is no concept of 'from' and 'to' as frame names aren't tracked or used (e.g. use of Pose iso PoseStamped).
 It is up to the user to keep track of those.
 
