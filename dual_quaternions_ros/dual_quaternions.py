@@ -41,7 +41,7 @@ class DualQuaternion(object):
                 type(q_r), type(q_d)))
         if normalize:
             self.q_d = q_d / q_r.norm()
-            self.q_r = q_r.normalize()
+            self.q_r = q_r.normalized()
         else:
             self.q_r = q_r
             self.q_d = q_d
@@ -269,24 +269,131 @@ class DualQuaternion(object):
 
     def pow(self, exponent):
         """self^exponent"""
-        return self.exp(exponent * self.log(self))
+        exponent = float(exponent)
+
+        theta = 2*np.arccos(self.q_r.w)
+        if np.isclose(theta, 0):
+            return DualQuaternion.from_translation_vector(exponent*np.array(self.translation()))
+        else:
+            s0 = self.q_r.vec / np.sin(theta/2)
+            d = -2. * self.q_d.w / np.sin(theta / 2)
+            se = (self.q_d.vec - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
+
+        q_r = np.quaternion(np.cos(exponent*theta/2), 0, 0, 0)
+        q_r.vec = np.sin(exponent*theta/2) * s0
+
+        q_d = np.quaternion(-exponent*d/2 * np.sin(exponent*theta/2), 0, 0, 0)
+        q_d.vec = exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se
+
+        return DualQuaternion(q_r, q_d)
+        # return self.exp(exponent * self.log(self))
 
     @classmethod
     def exp(cls, dq):
+        """
+
+        :param dq: non-zero unit DualQuaternion with zero scalar part (q_r.w = q_d.w = 0)
+        """
+        # theta = 2 * np.linalg.norm(dq.q_r.vec)
+        # d =
+        # sinthdiv2 = np.linalg.norm(dq.q_r.vec)
+        # sinddiv2 = np.linalg.norm(dq.q_d.vec)
+        # costhdiv2 = np.cos(np.arcsin(sinthdiv2))
+        # d = 2*np.arcsin(sinddiv2)
+        # if np.isnan(d):
+        #     d = 0.
+        #
+        # sru = dq.q_r.vec / sinthdiv2
+        # if np.isnan(sru).any():
+        #     sru = np.array([0., 0., 0.])
+        # sdu = dq.q_d.vec / sinddiv2
+        # if np.isnan(sdu).any():
+        #     sdu = np.array([0., 0., 0.])
+        #
+        # q_r = np.quaternion(costhdiv2, 0, 0, 0)
+        # q_r.vec = sinthdiv2 * sru
+        #
+        # q_d = np.quaternion(-d/2*sinthdiv2, 0, 0, 0)
+        # q_d.vec = d/2 * costhdiv2 * sru + sinthdiv2 * sdu
+
+        # qrn = np.linalg.norm(dq.q_r.vec)
+        # qdn = np.linalg.norm(dq.q_d.vec)
+        #
+        # q_r = np.quaternion(np.cos(qrn), 0, 0, 0)
+        # q_r.vec = np.sin(qrn) * dq.q_r.vec / qrn
+        # q_d = np.quaternion(np.cos(qdn), 0, 0, 0)
+        # q_d.vec = np.sin(qdn) * dq.q_d.vec / qdn
+        # print "exp, own: ", q_r, q_d
+        #
         q_r = dq.q_r.exp()
         q_d = q_r * dq.q_d
+        # print "exp, else: ", dq.q_r.exp(), dq.q_r.exp() * dq.q_d
+
         return cls(q_r, q_d)
 
     @classmethod
     def log(cls, dq):
-        q_r = dq.q_r.log()
-        q_d = dq.q_r.inverse() * dq.q_d
+        """
+
+        :param dq:
+        """
+        theta = 2*np.arccos(dq.q_r.w)
+        s0 = dq.q_r.vec / np.sin(theta/2)
+        d = -2. * dq.q_d.w / np.sin(theta/2)
+        se = (dq.q_d.vec - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
+
+        if np.isnan(d):
+            d = 0.
+        if np.isnan(theta):
+            theta = 0.
+
+        if np.isnan(s0).any():
+            s0 = np.array([0., 0., 0.])
+        if np.isnan(se).any():
+            se = np.array([0., 0., 0.])
+
+        q_r = np.quaternion(0, 0, 0, 0)
+        q_r.vec = theta/2 * s0
+        q_d = np.quaternion(0, 0, 0, 0)
+        q_d.vec = d/2*s0 + theta/2*se
+
+        # theta_r = 2*np.arctan2(np.linalg.norm(dq.q_r.vec), dq.q_r.w)
+        # theta_d = 2*np.arctan2(np.linalg.norm(dq.q_d.vec), dq.q_d.w)
+        #
+        # if not np.isclose(np.sin(theta_r/2), 0):
+        #     q_r = np.quaternion(0, 0, 0, 0)
+        #     q_r.vec = theta_r/2 * dq.q_r.vec / np.sin(theta_r/2)
+        # else:
+        #     q_r = np.quaternion(0, 0, 0, 0)
+        # if not np.isclose(np.sin(theta_d/2), 0):
+        #     q_d = np.quaternion(0, 0, 0, 0)
+        #     q_d.vec = theta_d/2 * dq.q_d.vec / np.sin(theta_d/2)
+        # else:
+        #     q_d = np.quaternion(0, 0, 0, 0)
+
+        # print "log, own: ", q_r, q_d
+        #
+        # q_r = dq.q_r.log()
+        # q_d = dq.q_r.inverse() * dq.q_d
+        #
+        # print "log, else: ", q_r, q_d
+
         return cls(q_r, q_d, normalize=False)
 
     @classmethod
     def sclerp(cls, start, stop, t):
-        """Screw Linear Interpolation"""
-        return (stop * start.quaternion_conjugate()).pow(t) * start
+        """Screw Linear Interpolation
+
+        Generalization of Quaternion slerp (Shoemake et al.) for rigid body motions
+        ScLERP guarantees both shortest path (on the manifold) and constant speed
+        interpolation and is independent of the choice of coordinate system.
+        ScLERP(dq1, dq2, t) = dq1 * dq12^t where dq12 = dq1^-1 * dq2
+
+        TODO: powers of antipodal dual quaternions differ and correspond to a
+        clockwise vs counter-clockwise rotation around the screw axis.
+        Check Kavan and Zara 2005 for a trivial method
+        """
+        return start * (start.inverse() * stop).pow(t)
 
     def nlerp(self, other, t):
         raise NotImplementedError()
