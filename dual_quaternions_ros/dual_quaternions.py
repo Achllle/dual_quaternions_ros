@@ -268,7 +268,10 @@ class DualQuaternion(object):
         self.q_d = normalized.q_d
 
     def pow(self, exponent):
-        """self^exponent"""
+        """self^exponent
+
+        :param exponent: single float
+        """
         exponent = float(exponent)
 
         theta = 2*np.arccos(self.q_r.w)
@@ -295,6 +298,11 @@ class DualQuaternion(object):
         ScLERP guarantees both shortest path (on the manifold) and constant speed
         interpolation and is independent of the choice of coordinate system.
         ScLERP(dq1, dq2, t) = dq1 * dq12^t where dq12 = dq1^-1 * dq2
+
+        :param start: DualQuaternion instance
+        :param stop: DualQuaternion instance
+        :param t: fraction betweem [0, 1] representing how far along and around the
+                  screw axis to interpolate
         """
         # ensure we always find closest solution. See Kavan and Zara 2005
         if (start.q_r * stop.q_r).w < 0:
