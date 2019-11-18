@@ -35,14 +35,16 @@ class DualQuaternion(object):
     The rotation part (non-dual) will always be normalized.
     """
 
-    def __init__(self, q_r, q_d):
+    def __init__(self, q_r, q_d, normalize=False):
         if not isinstance(q_r, np.quaternion) or not isinstance(q_d, np.quaternion):
             raise ValueError("q_r and q_d must be of type np.quaternion. Instead received: {} and {}".format(
                 type(q_r), type(q_d)))
-        self.q_r = q_r.normalized()
-        self.q_d = q_d
-        if not self.is_normalized():
-            raise AttributeError("Unnormalized dual quaternion provided: {}".format(self))
+        if normalize:
+            self.q_d = q_d / q_r.norm()
+            self.q_r = q_r.normalized()
+        else:
+            self.q_r = q_r
+            self.q_d = q_d
 
     def __str__(self):
         return "rotation: {}, translation: {}, \n".format(repr(self.q_r), repr(self.q_d)) + \
@@ -71,6 +73,13 @@ class DualQuaternion(object):
         See __mul__
         """
         return self.__mul__(other)
+
+    def __rmul__(self, other):
+        """Multiplication with a scalar
+
+        :param other: scalar
+        """
+        return DualQuaternion(self.q_r * other, self.q_d * other)
 
     def __div__(self, other):
         """
@@ -242,6 +251,8 @@ class DualQuaternion(object):
 
     def is_normalized(self):
         """Check if the dual quaternion is normalized"""
+        if np.isclose(self.q_r.norm(), 0):
+            return True
         rot_normalized = np.isclose(self.q_r.norm(), 1)
         trans_normalized = np.isclose(self.q_d / self.q_r.norm(), self.q_d)
         return rot_normalized and trans_normalized
@@ -256,9 +267,47 @@ class DualQuaternion(object):
         self.q_r = normalized.q_r
         self.q_d = normalized.q_d
 
-    def slerp(self, other, t):
-        """Spherical Linear Interpolation"""
-        raise NotImplementedError()
+    def pow(self, exponent):
+        """self^exponent
+
+        :param exponent: single float
+        """
+        exponent = float(exponent)
+
+        theta = 2*np.arccos(self.q_r.w)
+        if np.isclose(theta, 0):
+            return DualQuaternion.from_translation_vector(exponent*np.array(self.translation()))
+        else:
+            s0 = self.q_r.vec / np.sin(theta/2)
+            d = -2. * self.q_d.w / np.sin(theta / 2)
+            se = (self.q_d.vec - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
+
+        q_r = np.quaternion(np.cos(exponent*theta/2), 0, 0, 0)
+        q_r.vec = np.sin(exponent*theta/2) * s0
+
+        q_d = np.quaternion(-exponent*d/2 * np.sin(exponent*theta/2), 0, 0, 0)
+        q_d.vec = exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se
+
+        return DualQuaternion(q_r, q_d)
+
+    @classmethod
+    def sclerp(cls, start, stop, t):
+        """Screw Linear Interpolation
+
+        Generalization of Quaternion slerp (Shoemake et al.) for rigid body motions
+        ScLERP guarantees both shortest path (on the manifold) and constant speed
+        interpolation and is independent of the choice of coordinate system.
+        ScLERP(dq1, dq2, t) = dq1 * dq12^t where dq12 = dq1^-1 * dq2
+
+        :param start: DualQuaternion instance
+        :param stop: DualQuaternion instance
+        :param t: fraction betweem [0, 1] representing how far along and around the
+                  screw axis to interpolate
+        """
+        # ensure we always find closest solution. See Kavan and Zara 2005
+        if (start.q_r * stop.q_r).w < 0:
+            start.q_r *= -1
+        return start * (start.inverse() * stop).pow(t)
 
     def nlerp(self, other, t):
         raise NotImplementedError()
@@ -416,11 +465,3 @@ class DualQuaternion(object):
         q_d.vec = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
 
         return cls(q_r, q_d)
-
-    def skew(self):
-        """
-        TODO
-
-        :return:
-        """
-        raise NotImplementedError()

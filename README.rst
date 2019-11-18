@@ -10,21 +10,21 @@ ROS Dual Quaternions
     :alt: GitHub tag (latest SemVer)
     :target: https://GitHub.com/Achllle/dual_quaternions_ros/tags/
 
+.. image:: viz.gif
+    :scale: 50 %
+    :align: center
+    :target: https://gist.github.com/Achllle/c06c7a9b6706d4942fdc2e198119f0a2
+
+
 Why use dual quaternions?
 -------------------------
 
-* dual quaternions have all the advantages of quaternions including easy ScLERP, unambiguous representation, no gimbal lock, compact representation
-* for some applications, we need to convert matrices to quaternions because of their mathematical advantages like being able to find the exact tangent (exact derivative of dual numbers)
+* dual quaternions have all the advantages of quaternions including unambiguous representation, no gimbal lock, compact representation
+* direct and simple relation with screw theory. Simple and fast Screw Linear Interpolation (ScLERP) which is shortest path on the manifold
+* dual quaternions have an exact tangent / derivative due to dual number theory (higher order taylor series are exactly zero)
 * we want to use quaternions but they can only handle rotation. Dual quaternions are the correct extension to handle translations as well.
 * easy normalization. Homogeneous tranformation matrices are orthogonal and due to floating point errors operations on them often result in matrices that need to be renormalized. This can be done using the Gram-Schmidt method but that is a slow algorithm. Quaternion normalization is very fast.
 * mathematically pleasing
-
-Functionality:
-
-* conversion from and to common data types and ROS messages
-* basic dual quaternion operations (add, mul, div, log, exp, conj, inv, pow)
-* interpolation: ScLERP, DLB
-* transformations
 
 NOTE: there is no concept of 'from' and 'to' as frame names aren't tracked or used (e.g. use of Pose iso PoseStamped).
 It is up to the user to keep track of those.

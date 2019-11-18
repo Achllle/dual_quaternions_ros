@@ -10,7 +10,7 @@ import geometry_msgs.msg
 class TestDualQuaternion(TestCase):
 
     def setUp(self):
-        self.unit_dq = DualQuaternion.identity()
+        self.identity_dq = DualQuaternion.identity()
         self.random_dq = DualQuaternion.from_quat_pose_array(np.array([1,2,3,4,5,6,7]))
         self.other_random_dq = DualQuaternion.from_quat_pose_array(np.array([0.2,0.1,0.3,0.07,1.2,0.9]))
         self.normalized_dq = self.random_dq.normalized()
@@ -29,7 +29,7 @@ class TestDualQuaternion(TestCase):
         ros_pose = geometry_msgs.msg.Pose()
         ros_pose.orientation.w = 1.
         dq5 = DualQuaternion.from_ros_pose(ros_pose)
-        self.assertEqual(dq5, self.unit_dq)
+        self.assertEqual(dq5, self.identity_dq)
         self.assertEqual(dq5.ros_pose(), ros_pose)
         # from ROS transform
         ros_transform = geometry_msgs.msg.Transform()
@@ -54,9 +54,9 @@ class TestDualQuaternion(TestCase):
         q_r_unit = np.quaternion(1, 0, 0, 0)
         q_d_zero = np.quaternion(0, 0, 0, 0)
         unit_dq = DualQuaternion(q_r_unit, q_d_zero)
-        self.assertEqual(self.unit_dq, unit_dq)
+        self.assertEqual(self.identity_dq, unit_dq)
         # unit dual quaternion multiplied with another unit quaternion should yield unit
-        self.assertEqual(self.unit_dq * self.unit_dq, self.unit_dq)
+        self.assertEqual(self.identity_dq * self.identity_dq, self.identity_dq)
 
     def test_add(self):
         dq1 = DualQuaternion.from_translation_vector([4, 6, 8])
@@ -104,8 +104,8 @@ class TestDualQuaternion(TestCase):
     def test_div(self):
         try:
             np.testing.assert_array_almost_equal((self.random_dq/self.random_dq).dq_array(),
-                                                 self.unit_dq.dq_array())
-            np.testing.assert_array_almost_equal((self.random_dq/self.unit_dq).dq_array(),
+                                                 self.identity_dq.dq_array())
+            np.testing.assert_array_almost_equal((self.random_dq/self.identity_dq).dq_array(),
                                                  self.random_dq.dq_array())
         except AssertionError as e:
             self.fail(e)
@@ -123,9 +123,9 @@ class TestDualQuaternion(TestCase):
             self.fail(e)
 
     def test_equal(self):
-        self.assertTrue(self.unit_dq == DualQuaternion.identity())
-        self.assertTrue(self.unit_dq == DualQuaternion(-np.quaternion(1, 0, 0, 0), -np.quaternion(0, 0, 0, 0)))
-        self.assertFalse(self.unit_dq == DualQuaternion(np.quaternion(1, 0, 0, 1), -np.quaternion(0, 0, 0, 0)))
+        self.assertEqual(self.identity_dq, DualQuaternion.identity())
+        self.assertEqual(self.identity_dq, DualQuaternion(-np.quaternion(1, 0, 0, 0), -np.quaternion(0, 0, 0, 0)))
+        self.assertFalse(self.identity_dq == DualQuaternion(np.quaternion(1, 0, 0, 1), -np.quaternion(0, 0, 0, 0)))
         theta1 = np.pi / 180 * 20  # 20 deg
         T_pure_rot = np.array([[1., 0., 0., 0.],
                                [0., np.cos(theta1), -np.sin(theta1), 0.],
@@ -152,23 +152,23 @@ class TestDualQuaternion(TestCase):
 
     def test_str_repr_is_string(self):
         # test that __str__ and __repr__ are working
-        self.assertTrue(isinstance(repr(self.unit_dq), basestring))
-        self.assertTrue(isinstance(self.unit_dq.__str__(), basestring))
+        self.assertTrue(isinstance(repr(self.identity_dq), basestring))
+        self.assertTrue(isinstance(self.identity_dq.__str__(), basestring))
 
     def test_quaternion_conjugate(self):
         dq = self.normalized_dq * self.normalized_dq.quaternion_conjugate()
         # a normalized quaternion multiplied with its quaternion conjugate should yield unit dual quaternion
-        self.assertTrue(dq == DualQuaternion.identity())
+        self.assertEqual(dq, DualQuaternion.identity())
 
         # test that the conjugate corresponds to the inverse of it's matrix representation
         matr = self.normalized_dq.homogeneous_matrix()
         inv = np.linalg.inv(matr)
-        self.assertTrue(DualQuaternion.from_homogeneous_matrix(inv) == self.normalized_dq.quaternion_conjugate())
+        self.assertEqual(DualQuaternion.from_homogeneous_matrix(inv), self.normalized_dq.quaternion_conjugate())
 
         # (dq1 @ dq2)* ?= dq2* @ dq1*
         res1 = (self.random_dq * self.other_random_dq).quaternion_conjugate()
         res2 = self.other_random_dq.quaternion_conjugate() * self.random_dq.quaternion_conjugate()
-        self.assertTrue(res1 == res2)
+        self.assertEqual(res1, res2)
 
     def test_homogeneous_conversion(self):
         # 1. starting from a homogeneous matrix
@@ -187,24 +187,24 @@ class TestDualQuaternion(TestCase):
         # check that dual quaternions are also equal
         dq1 = DualQuaternion.from_homogeneous_matrix(H1)
         dq_double1 = DualQuaternion.from_homogeneous_matrix(double_conv1)
-        self.assertTrue(dq1 == dq_double1)
+        self.assertEqual(dq1, dq_double1)
 
         # 2. starting from a DQ
         dq_trans = DualQuaternion.from_translation_vector([10, 5, 0])
         dq_rot = DualQuaternion.from_dq_array([np.cos(theta1 / 2), np.sin(theta1 / 2), 0, 0, 0, 0, 0, 0])
         dq2 = dq_trans * dq_rot
         # check that this is the same as the previous DQ
-        self.assertTrue(dq2 == dq1)
+        self.assertEqual(dq2, dq1)
         # check that if we convert to homogeneous matrix and back, we get the same result
         double_conv2 = DualQuaternion.from_homogeneous_matrix(dq2.homogeneous_matrix())
-        self.assertTrue(dq2 == double_conv2)
+        self.assertEqual(dq2, double_conv2)
 
     def test_dual_number_conjugate(self):
         # dual number conjugate doesn't behave as you would expect given its special definition
         # (dq1 @ dq2)* ?= dq1* @ dq2*  This is a different order than the other conjugates!
         res1 = (self.random_dq * self.other_random_dq).dual_number_conjugate()
         res2 = self.random_dq.dual_number_conjugate() * self.other_random_dq.dual_number_conjugate()
-        self.assertTrue(res1 == res2)
+        self.assertEqual(res1, res2)
 
     def test_combined_conjugate(self):
         dq = self.normalized_dq * self.normalized_dq.combined_conjugate()
@@ -213,11 +213,11 @@ class TestDualQuaternion(TestCase):
         # (dq1 @ dq2)* ?= dq2* @ dq1*
         res1 = (self.random_dq * self.other_random_dq).combined_conjugate()
         res2 = self.other_random_dq.combined_conjugate() * self.random_dq.combined_conjugate()
-        self.assertTrue(res1 == res2)
+        self.assertEqual(res1, res2)
 
     def test_normalize(self):
-        self.assertTrue(self.unit_dq.is_normalized())
-        self.assertEqual(self.unit_dq.normalized(), self.unit_dq)
+        self.assertTrue(self.identity_dq.is_normalized())
+        self.assertEqual(self.identity_dq.normalized(), self.identity_dq)
         unnormalized_dq = DualQuaternion.from_quat_pose_array([1, 2, 3, 4, 5, 6, 7])
         unnormalized_dq.normalize()  # now normalized!
         self.assertTrue(unnormalized_dq.is_normalized())
@@ -225,7 +225,7 @@ class TestDualQuaternion(TestCase):
     def test_transform(self):
         # transform a point from one frame (f2) to another (f1)
         point_f2 = [1, 1, 0]
-        self.assertEqual(self.unit_dq.transform_point(point_f2), point_f2)
+        self.assertEqual(self.identity_dq.transform_point(point_f2), point_f2)
 
         # test that quaternion transform and matrix transform yield the same result
         T_f1_f2 = np.array([[1, 0, 0, 2], [0, 0.5403, -0.8415, 3], [0, 0.8415, 0.5403, 1], [0, 0, 0, 1]])
@@ -241,7 +241,7 @@ class TestDualQuaternion(TestCase):
 
     def test_screw(self):
         # test unit
-        l, m, theta, d = self.unit_dq.screw()
+        l, m, theta, d = self.identity_dq.screw()
         self.assertEqual(d, 0)
         self.assertEqual(theta, 0)
 
@@ -323,12 +323,62 @@ class TestDualQuaternion(TestCase):
     def test_saving_loading(self):
         # get the cwd so we can create a couple test files that we'll remove later
         dir = os.getcwd()
-        self.unit_dq.save(dir + '/identity.json')
+        self.identity_dq.save(dir + '/identity.json')
         # load it back in
         loaded_unit = DualQuaternion.from_file(dir + '/identity.json')
-        self.assertEqual(self.unit_dq, loaded_unit)
+        self.assertEqual(self.identity_dq, loaded_unit)
         # clean up
         os.remove(dir + '/identity.json')
 
     def test_loading_illegal(self):
         self.assertRaises(IOError, DualQuaternion.from_file, 'boguspath')
+
+    def test_sclerp_position(self):
+        """test Screw Linear Interpolation for diff position, same orientation"""
+        dq1 = DualQuaternion.from_translation_vector([2, 2, 2])
+        dq2 = DualQuaternion.from_translation_vector([3, 4, -2])
+        interpolated1 = DualQuaternion.sclerp(dq1, dq2, 0.5)
+        expected1 = DualQuaternion.from_translation_vector([2.5, 3, 0])
+        self.assertEqual(interpolated1, expected1)
+        interpolated2 = DualQuaternion.sclerp(dq1, dq2, 0.1)
+        expected2 = DualQuaternion.from_translation_vector([2.1, 2.2, 1.6])
+        self.assertEqual(interpolated2, expected2)
+
+    def test_sclerp_orientation(self):
+        """test Screw Linear Interpolation for diff orientation, same position"""
+        T_id = DualQuaternion.identity().homogeneous_matrix()
+        T_id[0:2, 0:2] = np.array([[0, -1], [1, 0]])  # rotate 90 around z
+        dq2 = DualQuaternion.from_homogeneous_matrix(T_id)
+        interpolated1 = DualQuaternion.sclerp(self.identity_dq, dq2, 0.5)
+        T_exp = DualQuaternion.identity().homogeneous_matrix()
+        sq22 = np.sqrt(2)/2
+        T_exp[0:2, 0:2] = np.array([[sq22, -sq22], [sq22, sq22]])  # rotate 45 around z
+        expected1 = DualQuaternion.from_homogeneous_matrix(T_exp)
+        self.assertEqual(interpolated1, expected1)
+        interpolated2 = DualQuaternion.sclerp(self.identity_dq, dq2, 0)
+        interpolated3 = DualQuaternion.sclerp(self.identity_dq, dq2, 1)
+        self.assertEqual(interpolated2, self.identity_dq)
+        self.assertEqual(interpolated3, dq2)
+
+    def test_sclerp_screw(self):
+        """Interpolating with ScLERP should yield same result as interpolating with screw parameters
+        ScLERP is a screw motion interpolation with constant rotation and translation speeds. We can
+        simply interpolate screw parameters theta and d and we should get the same result.
+        """
+        taus = [0., 0.23, 0.6, 1.0]
+        l, m, theta, d = self.normalized_dq.screw()
+        for tau in taus:
+            # interpolate using sclerp
+            interpolated_dq = DualQuaternion.sclerp(self.identity_dq, self.normalized_dq, tau)
+            # interpolate using screw: l and m stay the same, theta and d vary with tau
+            interpolated_dq_screw = DualQuaternion.from_screw(l, m, tau*theta, tau*d)
+            self.assertEqual(interpolated_dq, interpolated_dq_screw)
+
+    def test_pow(self):
+        expected_result = self.normalized_dq * self.normalized_dq
+        received_result = self.normalized_dq.pow(2)
+        self.assertEqual(received_result, expected_result)
+
+        expected_result = self.random_dq * self.random_dq
+        received_result = self.random_dq.pow(2)
+        self.assertEqual(received_result, expected_result)
