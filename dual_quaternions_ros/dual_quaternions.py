@@ -388,11 +388,10 @@ class DualQuaternion(object):
         ScLERP guarantees both shortest path (on the manifold) and constant speed
         interpolation and is independent of the choice of coordinate system.
         ScLERP(dq1, dq2, t) = dq1 * dq12^t where dq12 = dq1^-1 * dq2
-
-        TODO: powers of antipodal dual quaternions differ and correspond to a
-        clockwise vs counter-clockwise rotation around the screw axis.
-        Check Kavan and Zara 2005 for a trivial method
         """
+        # ensure we always find closest solution. See Kavan and Zara 2005
+        if (start.q_r * stop.q_r).w < 0:
+            start.q_r *= -1
         return start * (start.inverse() * stop).pow(t)
 
     def nlerp(self, other, t):
