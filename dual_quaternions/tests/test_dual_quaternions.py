@@ -1,10 +1,8 @@
 import os
 from unittest import TestCase
-from dual_quaternions_ros import DualQuaternion
+from dual_quaternions import DualQuaternion
 import numpy as np
 import quaternion
-
-import geometry_msgs.msg
 
 
 class TestDualQuaternion(TestCase):
@@ -25,18 +23,6 @@ class TestDualQuaternion(TestCase):
         dq3 = DualQuaternion.from_quat_pose_array(np.array([1, 2, 3, 4, 5, 6, 7]))
         dq4 = DualQuaternion.from_quat_pose_array([1, 2, 3, 4, 5, 6, 7])
         self.assertEqual(dq3, dq4)
-        # from ROS pose
-        ros_pose = geometry_msgs.msg.Pose()
-        ros_pose.orientation.w = 1.
-        dq5 = DualQuaternion.from_ros_pose(ros_pose)
-        self.assertEqual(dq5, self.identity_dq)
-        self.assertEqual(dq5.ros_pose(), ros_pose)
-        # from ROS transform
-        ros_transform = geometry_msgs.msg.Transform()
-        ros_transform.rotation.w = 1.
-        dq6 = DualQuaternion.from_ros_transform(ros_transform)
-        self.assertEqual(dq5, dq6)
-        self.assertEqual(dq6.ros_transform(), ros_transform)
         # from homogeneous transformation matrix
         T = np.array([[1, 0, 0, 2], [0, 1, 0, 3], [0, 0, 1, 1], [0, 0, 0, 1]])
         dq7 = DualQuaternion.from_homogeneous_matrix(T)
