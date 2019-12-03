@@ -10,6 +10,14 @@ Dual Quaternions
     :alt: GitHub tag (latest SemVer)
     :target: https://GitHub.com/Achllle/dual_quaternions_ros/tags/
 
+Dual quaternions are a way of representing rigid body transformations, just like homogeneous transformations do.
+Instead of using a 4 by 4 matrix, the transformation is represented as two quaternions. This has several advantages,
+see `Why use dual quaternions?`_. The term 'dual' refers to dual number theory, which allows representing numbers
+(or in this case quaternions) very similar to complex numbers with the difference being that `i` or `j` becomes
+`e` (epsilon) and instead of `i^2 = -1` we have `e^2 = 0`. This allows e.g. multiplication of two dual quaternions
+to work in the same way as homogeneous matrix multiplication.
+For more information, take a look at the `References`_.
+
 .. image:: viz.gif
     :scale: 50 %
     :align: center
@@ -29,7 +37,7 @@ Why use dual quaternions?
 * mathematically pleasing
 
 References
-~~~~~~~~~~
+----------
 
 * \K. Daniilidis, E. Bayro-Corrochano, "The dual quaternion approach to hand-eye calibration", IEEE International Conference on Pattern Recognition, 1996
 * Kavan, Ladislav & Collins, Steven & Zara, Jiri & O'Sullivan, Carol. (2007). Skinning with dual quaternions. I3D. 39-46. 10.1145/1230100.1230107.
