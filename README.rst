@@ -13,9 +13,9 @@ Dual Quaternions
 Dual quaternions are a way of representing rigid body transformations, just like homogeneous transformations do.
 Instead of using a 4 by 4 matrix, the transformation is represented as two quaternions. This has several advantages,
 see `Why use dual quaternions?`_. The term 'dual' refers to dual number theory, which allows representing numbers
-(or in this case quaternions) very similar to complex numbers with the difference being that `i` or `j` becomes
-`e` (epsilon) and instead of `i^2 = -1` we have `e^2 = 0`. This allows e.g. multiplication of two dual quaternions
-to work in the same way as homogeneous matrix multiplication.
+(or in this case quaternions) very similar to complex numbers with the difference being that :code:`i` or :code:`j`
+becomes :code:`e` (epsilon) and instead of :code:`i^2 = -1` we have :code:`e^2 = 0`. This allows e.g. multiplication of
+two dual quaternions to work in the same way as homogeneous matrix multiplication.
 For more information, take a look at the `References`_.
 
 .. image:: viz.gif
