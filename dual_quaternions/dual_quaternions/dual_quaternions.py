@@ -1,5 +1,5 @@
 """
-DualQuaternions for ROS
+DualQuaternions operations, interpolation, conversions
 
 Author: Achille Verheye
 License: MIT
