@@ -34,7 +34,9 @@ install:
   - pip install -I nose
   - sudo pip uninstall numpy -y
   - pip install numpy
-  - pip install -e .
+  - pip install dual_quaternions
+  - pip install dual_quaternions_ros
 # command to run tests
 script:
+  - cd dual_quaternions
   - python setup.py test
