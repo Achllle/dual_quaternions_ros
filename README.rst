@@ -43,10 +43,10 @@ Installation
 From source
 ~~~~~~~~~~~
 
-```
-cd dual_quaternions && pip install . && cd ..
-cd dual_quaternions_ros && pip install . && cd ..
-```
+.. codeblock:: bash
+  cd dual_quaternions && pip install . && cd ..
+  cd dual_quaternions_ros && pip install . && cd ..
+
 You can omit the second line if you don't need the ROS functionality.
 
 References
