@@ -37,6 +37,18 @@ Why use dual quaternions?
 * easy normalization. Homogeneous tranformation matrices are orthogonal and due to floating point errors operations on them often result in matrices that need to be renormalized. This can be done using the Gram-Schmidt method but that is a slow algorithm. Quaternion normalization is very fast.
 * mathematically pleasing
 
+Installation
+------------
+
+From source
+~~~~~~~~~~~
+
+```
+cd dual_quaternions && pip install . && cd ..
+cd dual_quaternions_ros && pip install . && cd ..
+```
+You can omit the second line if you don't need the ROS functionality.
+
 References
 ----------
 
