@@ -43,7 +43,8 @@ Installation
 From source
 ~~~~~~~~~~~
 
-.. codeblock:: bash
+.. code-block:: bash
+
   cd dual_quaternions && pip install . && cd ..
   cd dual_quaternions_ros && pip install . && cd ..
 
