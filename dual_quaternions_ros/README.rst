@@ -6,13 +6,6 @@ Simple conversion methods for going from ROS `geometry_msgs` to dual quaternions
 NOTE: there is no concept of 'from' and 'to' as frame names aren't tracked or used (e.g. use of Pose iso PoseStamped).
 It is up to the user to keep track of those.
 
-Installation & Requirements
----------------------------
-
-In this directory::
-
-    pip install .
-
 Requirements
 ~~~~~~~~~~~~
 

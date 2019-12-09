@@ -40,15 +40,15 @@ Why use dual quaternions?
 Installation
 ------------
 
-From source
-~~~~~~~~~~~
+.. code-block:: bash
+
+  pip install dual_quaternions_ros
+
+Or if you don't need the ROS bindings:
 
 .. code-block:: bash
 
-  cd dual_quaternions && pip install . && cd ..
-  cd dual_quaternions_ros && pip install . && cd ..
-
-You can omit the second line if you don't need the ROS functionality.
+  pip install dual_quaternions
 
 References
 ----------
