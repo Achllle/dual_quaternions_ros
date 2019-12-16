@@ -5,7 +5,7 @@ Author: Achille Verheye
 License: MIT
 """
 import numpy as np
-import quaternion
+import quaternion  # numpy-quaternion
 import json
 
 
