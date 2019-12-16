@@ -10,6 +10,13 @@ Requirements
 * scipy
 * numba
 
+Installation
+------------
+
+.. code-block:: bash
+
+  pip install dual_quaternions
+
 Usage
 -----
 
