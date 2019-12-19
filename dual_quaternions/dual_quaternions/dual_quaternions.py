@@ -1,14 +1,12 @@
 """
-DualQuaternions for ROS
+DualQuaternions operations, interpolation, conversions
 
 Author: Achille Verheye
 License: MIT
 """
 import numpy as np
-import quaternion
+import quaternion  # numpy-quaternion
 import json
-
-import geometry_msgs.msg
 
 
 class DualQuaternion(object):
@@ -24,8 +22,6 @@ class DualQuaternion(object):
                                                    [r21, r22, r23, ty],
                                                    [r31, r32, r33, tz],
                                                    [  0,   0,   0,  1])
-    $ dq = DualQuaternion.from_ros_pose(geometry_msgs.msg.Pose)
-    $ dq = DualQuaternion.from_ros_transform(geometry_msgs.msg.Transform)
     $ dq = DualQuaternion.from_quat_pose_array([q_w, q_x, q_y, q_z, x, y, z])
     $ dq = DualQuaternion.from_translation_vector([x y z])
     $ dq = DualQuaternion.identity() --> zero translation, unit rotation
@@ -161,30 +157,6 @@ class DualQuaternion(object):
         quat_pose_array[4:] = arr[:3, 3]
 
         return cls.from_quat_pose_array(quat_pose_array)
-
-    @classmethod
-    def from_ros_pose(cls, pose_msg):
-        """
-        Create a DualQuaternion instance from a ROS Pose msg
-
-        :param pose_msg: geometry_msgs.msg.Pose()
-        """
-        tra = pose_msg.position
-        rot = pose_msg.orientation
-
-        return cls.from_quat_pose_array([rot.w, rot.x, rot.y, rot.z, tra.x, tra.y, tra.z])
-
-    @classmethod
-    def from_ros_transform(cls, transform_msg):
-        """
-        Create a DualQuaternion instance from a ROS Transform msg
-
-        :param transform_msg: geometry_msgs.msg.Transform()
-        """
-        tra = transform_msg.translation
-        rot = transform_msg.rotation
-
-        return cls.from_quat_pose_array([rot.w, rot.x, rot.y, rot.z, tra.x, tra.y, tra.z])
 
     @classmethod
     def from_quat_pose_array(cls, r_wxyz_t_xyz):
@@ -342,30 +314,6 @@ class DualQuaternion(object):
         homogeneous_mat[3, 3] = 1.
 
         return homogeneous_mat
-
-    def ros_pose(self):
-        """ROS geometry_msgs.msg.Pose instance"""
-        pose_msg = geometry_msgs.msg.Pose()
-        quat_pose_arr = self.quat_pose_array()
-        rot = quat_pose_arr[:4]
-        tra = quat_pose_arr[4:]
-        pose_msg.position = geometry_msgs.msg.Point(*tra)
-        # ROS uses [x y z w] format
-        pose_msg.orientation = geometry_msgs.msg.Quaternion(rot[1], rot[2], rot[3], rot[0])
-
-        return pose_msg
-
-    def ros_transform(self):
-        """ROS geometry_msgs.msg.Transform instance"""
-        transform_msg = geometry_msgs.msg.Transform()
-        quat_pose_arr = self.quat_pose_array()
-        rot = quat_pose_arr[:4]
-        tra = quat_pose_arr[4:]
-        transform_msg.translation = geometry_msgs.msg.Vector3(*tra)
-        # ROS uses [x y z w] format
-        transform_msg.rotation = geometry_msgs.msg.Quaternion(rot[1], rot[2], rot[3], rot[0])
-
-        return transform_msg
 
     def quat_pose_array(self):
         """

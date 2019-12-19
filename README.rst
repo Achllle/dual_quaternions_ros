@@ -1,5 +1,5 @@
-ROS Dual Quaternions
-====================
+Dual Quaternions
+================
 
 |travis| |tags|
 
@@ -10,11 +10,22 @@ ROS Dual Quaternions
     :alt: GitHub tag (latest SemVer)
     :target: https://GitHub.com/Achllle/dual_quaternions_ros/tags/
 
+Dual quaternions are a way of representing rigid body transformations, just like homogeneous transformations do.
+Instead of using a 4 by 4 matrix, the transformation is represented as two quaternions. This has several advantages,
+which are listed under `Why use dual quaternions?`_ The term 'dual' refers to dual number theory, which allows
+representing numbers (or in this case quaternions) very similar to complex numbers with the difference being that
+:code:`i` or :code:`j` becomes :code:`e` (epsilon) and instead of :code:`i^2 = -1` we have :code:`e^2 = 0`.
+This allows e.g. multiplication of two dual quaternions to work in the same way as homogeneous matrix multiplication.
+
+For more information on dual quaternions, take a look at the `References`_.
+
 .. image:: viz.gif
     :scale: 50 %
     :align: center
     :target: https://gist.github.com/Achllle/c06c7a9b6706d4942fdc2e198119f0a2
 
+This repo contains two pip packages, one purely pythonic `dual_quaternions` package and one that provides interfaces
+for conversions with common ROS messages that depends on the former. See the READMEs for each package.
 
 Why use dual quaternions?
 -------------------------
@@ -26,46 +37,21 @@ Why use dual quaternions?
 * easy normalization. Homogeneous tranformation matrices are orthogonal and due to floating point errors operations on them often result in matrices that need to be renormalized. This can be done using the Gram-Schmidt method but that is a slow algorithm. Quaternion normalization is very fast.
 * mathematically pleasing
 
-NOTE: there is no concept of 'from' and 'to' as frame names aren't tracked or used (e.g. use of Pose iso PoseStamped).
-It is up to the user to keep track of those.
+Installation
+------------
 
-Installation & Requirements
----------------------------
+.. code-block:: bash
 
-In this directory::
+  pip install dual_quaternions_ros
 
-    pip install .
+Or if you don't need the ROS bindings:
 
-Requirements
-~~~~~~~~~~~~
+.. code-block:: bash
 
-* numpy-quaternion
-* scipy
-* geometry_msgs from ROS
-
-Usage
------
-
-Import using::
-
-    from dual_quaternions_ros import DualQuaternion
-
-Publishing and getting transforms from tf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This package purposefully doesn't have methods to receive and publish transforms to tf. Instead, it supports converting
-transforms to various ROS messages so you can use the standard way of interfacing: ::
-
-    br = tf2_ros.TransformBroadcaster()
-    T_odom_baselink = DualQuaternion(...)
-    msg = geometry_msgs.msg.TransformStamped()
-    msg.transform = T_odom_baselink.ros_transform
-    msg.header.frame_id = 'odom'
-    msg.child_frame_id = 'base_link'
-    br.sendTransform(msg)
+  pip install dual_quaternions
 
 References
-~~~~~~~~~~
+----------
 
 * \K. Daniilidis, E. Bayro-Corrochano, "The dual quaternion approach to hand-eye calibration", IEEE International Conference on Pattern Recognition, 1996
 * Kavan, Ladislav & Collins, Steven & Zara, Jiri & O'Sullivan, Carol. (2007). Skinning with dual quaternions. I3D. 39-46. 10.1145/1230100.1230107.
