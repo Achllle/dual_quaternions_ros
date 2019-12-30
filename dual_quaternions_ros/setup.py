@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
 
 def readme():
     with open('README.rst') as f:
@@ -12,8 +12,5 @@ setup(name='dual_quaternions_ros',
       author='Achille Verheye',
       author_email='achille.verheye@gmail.com',
       license='MIT',
-      packages=find_packages(),
-      install_requires=['dual_quaternions'],
-      zip_safe=False,
-      test_suite='nose.collector',
-      tests_require='nose')
+      packages=['dual_quaternions_ros'],
+      package_dir={'': 'src'})
