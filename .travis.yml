@@ -40,5 +40,5 @@ install:
   - cd ~/catkin_ws && catkin_make
 # command to run tests
 script:
-  - cd dual_quaternions
+  - cd $CI_SOURCE_PATH/dual_quaternions
   - python setup.py test
