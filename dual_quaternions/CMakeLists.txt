@@ -3,8 +3,6 @@ project(dual_quaternions)
 
 find_package(catkin REQUIRED)
 
-catkin_package(
-#  LIBRARIES dual_quaternions
-)
+catkin_package()
 
 catkin_python_setup()

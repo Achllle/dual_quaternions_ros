@@ -7,9 +7,6 @@ find_package(catkin REQUIRED COMPONENTS
   dual_quaternions
 )
 
-catkin_package(
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+catkin_package()
 
 catkin_python_setup()
