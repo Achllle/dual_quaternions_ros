@@ -35,7 +35,7 @@ install:
   - sudo pip uninstall numpy -y
   - pip install numpy
   - cd dual_quaternions && pip install . && cd ..
-  - cd dual_quaternions_ros && pip install . && cd ..
+  - cd .. && catkin_make
 # command to run tests
 script:
   - cd dual_quaternions
