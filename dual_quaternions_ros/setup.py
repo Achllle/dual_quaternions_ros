@@ -12,5 +12,6 @@ setup(name='dual_quaternions_ros',
       author='Achille Verheye',
       author_email='achille.verheye@gmail.com',
       license='MIT',
+      install_requires=['dual_quaternions'],
       packages=['dual_quaternions_ros'],
       package_dir={'': 'src'})
