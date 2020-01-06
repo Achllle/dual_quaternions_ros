@@ -40,6 +40,9 @@ Why use dual quaternions?
 Installation
 ------------
 
+pip
+~~~
+
 .. code-block:: bash
 
   pip install dual_quaternions_ros
@@ -49,6 +52,12 @@ Or if you don't need the ROS bindings:
 .. code-block:: bash
 
   pip install dual_quaternions
+
+ROS package
+~~~~~~~~~~~
+
+Release into apt is on its way. Until then you'll have to build the catkin package from source. Simply clone this repo into your
+catkin workspace and build with :code:`catkin_make`
 
 References
 ----------
