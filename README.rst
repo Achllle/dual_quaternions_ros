@@ -56,8 +56,14 @@ Or if you don't need the ROS bindings:
 ROS package
 ~~~~~~~~~~~
 
-Release into apt is on its way. Until then you'll have to build the catkin package from source. Simply clone this repo into your
-catkin workspace and build with :code:`catkin_make`
+Release into apt is on its way. Until then you'll have to build the catkin package from source.
+
+.. code-block:: bash
+
+  cd ~/catkin_ws/src
+  git clone https://github.com/Achllle/dual_quaternions_ros
+  cd ..
+  catkin_make
 
 References
 ----------
