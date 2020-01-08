@@ -17,6 +17,8 @@ Installation
 
   pip install dual_quaternions
 
+This folder is also a ROS package which can be used from source.
+
 Usage
 -----
 

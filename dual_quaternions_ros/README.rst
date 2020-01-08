@@ -14,6 +14,8 @@ We assume that ROS has been installed already
 
   pip install dual_quaternions_ros
 
+This folder is also a ROS package which can be used from source.
+
 Requirements
 ~~~~~~~~~~~~
 
