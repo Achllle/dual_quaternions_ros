@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 from dual_quaternions import DualQuaternion
 import numpy as np
-import quaternion
+from pyquaternion import Quaternion
 
 
 class TestDualQuaternion(TestCase):
@@ -26,7 +26,7 @@ class TestDualQuaternion(TestCase):
         # from homogeneous transformation matrix
         T = np.array([[1, 0, 0, 2], [0, 1, 0, 3], [0, 0, 1, 1], [0, 0, 0, 1]])
         dq7 = DualQuaternion.from_homogeneous_matrix(T)
-        self.assertEqual(dq7.q_r, quaternion.one)
+        self.assertEqual(dq7.q_r, Quaternion())
         self.assertEqual(dq7.translation(), [2, 3, 1])
         try:
             np.testing.assert_array_almost_equal(dq7.homogeneous_matrix(), T)
@@ -37,8 +37,8 @@ class TestDualQuaternion(TestCase):
         self.assertEqual(dq8.translation(), [4, 6, 8])
 
     def test_unit(self):
-        q_r_unit = np.quaternion(1, 0, 0, 0)
-        q_d_zero = np.quaternion(0, 0, 0, 0)
+        q_r_unit = Quaternion(1, 0, 0, 0)
+        q_d_zero = Quaternion(0, 0, 0, 0)
         unit_dq = DualQuaternion(q_r_unit, q_d_zero)
         self.assertEqual(self.identity_dq, unit_dq)
         # unit dual quaternion multiplied with another unit quaternion should yield unit
@@ -48,7 +48,7 @@ class TestDualQuaternion(TestCase):
         dq1 = DualQuaternion.from_translation_vector([4, 6, 8])
         dq2 = DualQuaternion.from_translation_vector([1, 2, 3])
         sum = dq1 + dq2
-        self.assertEqual(sum.q_d, np.quaternion(0., 2.5, 4., 5.5))
+        self.assertEqual(sum.q_d, Quaternion(0., 2.5, 4., 5.5))
 
     def test_mult(self):
         # quaternion multiplication. Compare with homogeneous transformation matrices
@@ -110,8 +110,8 @@ class TestDualQuaternion(TestCase):
 
     def test_equal(self):
         self.assertEqual(self.identity_dq, DualQuaternion.identity())
-        self.assertEqual(self.identity_dq, DualQuaternion(-np.quaternion(1, 0, 0, 0), -np.quaternion(0, 0, 0, 0)))
-        self.assertFalse(self.identity_dq == DualQuaternion(np.quaternion(1, 0, 0, 1), -np.quaternion(0, 0, 0, 0)))
+        self.assertEqual(self.identity_dq, DualQuaternion(-Quaternion(1, 0, 0, 0), -Quaternion(0, 0, 0, 0)))
+        self.assertFalse(self.identity_dq == DualQuaternion(Quaternion(1, 0, 0, 1), -Quaternion(0, 0, 0, 0)))
         theta1 = np.pi / 180 * 20  # 20 deg
         T_pure_rot = np.array([[1., 0., 0., 0.],
                                [0., np.cos(theta1), -np.sin(theta1), 0.],
@@ -195,7 +195,7 @@ class TestDualQuaternion(TestCase):
     def test_combined_conjugate(self):
         dq = self.normalized_dq * self.normalized_dq.combined_conjugate()
         # a normalized quaternion multiplied with its combined conjugate should yield unit rotation
-        self.assertAlmostEqual(dq.q_r, quaternion.one)
+        self.assertAlmostEqual(dq.q_r, Quaternion())
         # (dq1 @ dq2)* ?= dq2* @ dq1*
         res1 = (self.random_dq * self.other_random_dq).combined_conjugate()
         res2 = self.other_random_dq.combined_conjugate() * self.random_dq.combined_conjugate()
@@ -214,7 +214,10 @@ class TestDualQuaternion(TestCase):
         self.assertEqual(self.identity_dq.transform_point(point_f2), point_f2)
 
         # test that quaternion transform and matrix transform yield the same result
-        T_f1_f2 = np.array([[1, 0, 0, 2], [0, 0.5403, -0.8415, 3], [0, 0.8415, 0.5403, 1], [0, 0, 0, 1]])
+        T_f1_f2 = np.array([[1, 0, 0, 2],
+                            [0, 0.54028748, -0.8414805, 3],
+                            [0, 0.8414805, 0.54028748, 1],
+                            [0, 0, 0, 1]])
         dq_f1_f2 = DualQuaternion.from_homogeneous_matrix(T_f1_f2)
 
         # point is in f2, transformation will express it in f1
