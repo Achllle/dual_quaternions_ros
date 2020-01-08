@@ -10,7 +10,7 @@ class TestDualQuaternion(TestCase):
     def setUp(self):
         self.identity_dq = DualQuaternion.identity()
         self.random_dq = DualQuaternion.from_quat_pose_array(np.array([1,2,3,4,5,6,7]))
-        self.other_random_dq = DualQuaternion.from_quat_pose_array(np.array([0.2,0.1,0.3,0.07,1.2,0.9]))
+        self.other_random_dq = DualQuaternion.from_quat_pose_array(np.array([0.2,0.1,0.3,0.07,1.2,0.9,0.2]))
         self.normalized_dq = self.random_dq.normalized()
 
     def test_creation(self):
