@@ -36,6 +36,9 @@ install:
   - pip install -I nose
   - sudo pip uninstall numpy -y
   - pip install numpy
+  # clone pyquaternion custom fork, install with pip for now
+  - cd ~/catkin_ws/src && git clone https://github.com/Achllle/pyquaternion.git
+  - cd pyquaternion && pip install . && cd ..
   - cd dual_quaternions && pip install . && cd ..
   - cd ~/catkin_ws && catkin_make
 # command to run tests
