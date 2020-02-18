@@ -40,4 +40,4 @@ install:
   - cd ~/catkin_ws && catkin_make
 # command to run tests
 script:
-  - catkin_make run_tests
+  - catkin_make run_tests && catkin_test_results
