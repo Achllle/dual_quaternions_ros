@@ -63,6 +63,7 @@ Release into apt is on its way. Until then you'll have to build the catkin packa
   cd ~/catkin_ws/src
   git clone https://github.com/Achllle/dual_quaternions_ros
   cd ..
+  rosdep install --from-paths src/dual_quaternions_ros/ --ignore-src --as-root pip:false
   catkin_make
 
 References
