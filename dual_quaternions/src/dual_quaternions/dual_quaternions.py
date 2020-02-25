@@ -254,11 +254,11 @@ class DualQuaternion(object):
             d = -2. * self.q_d.w / np.sin(theta / 2)
             se = (self.q_d.vector - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
 
-        q_r = Quaternion(np.cos(exponent*theta/2), 0, 0, 0)
-        q_r.vector = np.sin(exponent*theta/2) * s0
+        q_r = Quaternion(scalar=np.cos(exponent*theta/2),
+                         vector=np.sin(exponent*theta/2) * s0)
 
-        q_d = Quaternion(-exponent*d/2 * np.sin(exponent*theta/2), 0, 0, 0)
-        q_d.vector = exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se
+        q_d = Quaternion(scalar=-exponent*d/2 * np.sin(exponent*theta/2),
+                         vector=exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se)
 
         return DualQuaternion(q_r, q_d)
 
@@ -404,9 +404,7 @@ class DualQuaternion(object):
                                  .format(l, np.linalg.norm(l)))
         theta = float(theta)
         d = float(d)
-        q_r = Quaternion(np.cos(theta/2), 0, 0, 0)
-        q_r.vector = np.sin(theta/2) * l
-        q_d = Quaternion(-d/2 * np.sin(theta/2), 0, 0, 0)
-        q_d.vector = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
+        q_r = Quaternion(scalar=np.cos(theta/2), vector=np.sin(theta/2) * l)
+        q_d = Quaternion(scalar=-d/2 * np.sin(theta/2), vector=np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l)
 
         return cls(q_r, q_d)
