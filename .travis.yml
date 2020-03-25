@@ -36,8 +36,9 @@ install:
   - pip install -I nose
   - sudo pip uninstall numpy -y
   - pip install numpy
-  - cd dual_quaternions && pip install . && cd ..
-  - cd ~/catkin_ws && catkin_make
+  - cd ~/catkin_ws
+  - rosdep install --from-paths src --ignore-src -r -y
+  - catkin_make
 # command to run tests
 script:
   - catkin_make run_tests && catkin_test_results

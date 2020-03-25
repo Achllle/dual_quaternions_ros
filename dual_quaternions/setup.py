@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 def readme():
     with open('README.rst') as f:
@@ -14,7 +14,7 @@ setup(name='dual_quaternions',
       license='MIT',
       packages=['dual_quaternions'],
       package_dir={'': 'src'},
-      install_requires=['numpy', 'scipy', 'numpy-quaternion', 'numba'],
+      install_requires=['numpy', 'pyquaternion'],
       zip_safe=False,
       test_suite='nose.collector',
       tests_require='nose')

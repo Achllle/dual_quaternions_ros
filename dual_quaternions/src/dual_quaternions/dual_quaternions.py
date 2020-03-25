@@ -5,7 +5,7 @@ Author: Achille Verheye
 License: MIT
 """
 import numpy as np
-import quaternion  # numpy-quaternion
+from pyquaternion import Quaternion  # pyquaternion
 import json
 
 
@@ -32,12 +32,12 @@ class DualQuaternion(object):
     """
 
     def __init__(self, q_r, q_d, normalize=False):
-        if not isinstance(q_r, np.quaternion) or not isinstance(q_d, np.quaternion):
-            raise ValueError("q_r and q_d must be of type np.quaternion. Instead received: {} and {}".format(
+        if not isinstance(q_r, Quaternion) or not isinstance(q_d, Quaternion):
+            raise ValueError("q_r and q_d must be of type pyquaternion.Quaternion. Instead received: {} and {}".format(
                 type(q_r), type(q_d)))
         if normalize:
             self.q_d = q_d / q_r.norm()
-            self.q_r = q_r.normalized()
+            self.q_r = q_r.normalised
         else:
             self.q_r = q_r
             self.q_d = q_d
@@ -108,8 +108,8 @@ class DualQuaternion(object):
         return DualQuaternion(self.q_r + other.q_r, self.q_d + other.q_d)
 
     def __eq__(self, other):
-        return (np.isclose(self.q_r, other.q_r) or np.isclose(self.q_r, -other.q_r)) \
-               and (np.isclose(self.q_d, other.q_d) or np.isclose(self.q_d, -other.q_d))
+        return (self.q_r == other.q_r or self.q_r == -other.q_r) \
+               and (self.q_d == other.q_d or self.q_d == -other.q_d)
 
     def __ne__(self, other):
         return not self == other
@@ -141,7 +141,7 @@ class DualQuaternion(object):
 
         :param r_wxyz_t_wxyz: np.array or python list: np.array([q_rw, q_rx, q_ry, q_rz, q_tx, q_ty, q_tz]
         """
-        return cls(np.quaternion(*r_wxyz_t_wxyz[:4]), np.quaternion(*r_wxyz_t_wxyz[4:]))
+        return cls(Quaternion(*r_wxyz_t_wxyz[:4]), Quaternion(*r_wxyz_t_wxyz[4:]))
 
     @classmethod
     def from_homogeneous_matrix(cls, arr):
@@ -150,7 +150,7 @@ class DualQuaternion(object):
 
         :param arr: 4 by 4 list or np.array
         """
-        q_r = quaternion.from_rotation_matrix(arr[:3, :3])
+        q_r = Quaternion(matrix=arr[:3, :3])
         quat_pose_array = np.zeros(7)
         quat_pose_array[:4] = np.array([q_r.w, q_r.x, q_r.y, q_r.z])
 
@@ -166,8 +166,8 @@ class DualQuaternion(object):
 
         :param r_wxyz_t_xyz: list or np.array in order: [q_rw, q_rx, q_ry, q_rz, tx, ty, tz]
         """
-        q_r = np.quaternion(*r_wxyz_t_xyz[:4]).normalized()
-        q_d = 0.5 * np.quaternion(0., *r_wxyz_t_xyz[4:]) * q_r
+        q_r = Quaternion(*r_wxyz_t_xyz[:4]).normalised
+        q_d = 0.5 * Quaternion(0., *r_wxyz_t_xyz[4:]) * q_r
 
         return cls(q_r, q_d)
 
@@ -181,7 +181,7 @@ class DualQuaternion(object):
 
     @classmethod
     def identity(cls):
-        return cls(quaternion.one, np.quaternion(0., 0., 0., 0.))
+        return cls(Quaternion(1., 0., 0., 0.), Quaternion(0., 0., 0., 0.))
 
     def quaternion_conjugate(self):
         """
@@ -191,7 +191,7 @@ class DualQuaternion(object):
         a transformation to a line expressed in Plucker coordinates.
         See also DualQuaternion.dual_conjugate() and DualQuaternion.combined_conjugate().
         """
-        return DualQuaternion(self.q_r.conjugate(), self.q_d.conjugate())
+        return DualQuaternion(self.q_r.conjugate, self.q_d.conjugate)
 
     def dual_number_conjugate(self):
         """
@@ -210,23 +210,23 @@ class DualQuaternion(object):
         This form is commonly used to transform a point
         See also DualQuaternion.dual_number_conjugate() and DualQuaternion.quaternion_conjugate().
         """
-        return DualQuaternion(self.q_r.conjugate(), -self.q_d.conjugate())
+        return DualQuaternion(self.q_r.conjugate, -self.q_d.conjugate)
 
     def inverse(self):
         """
         Return the dual quaternion inverse
 
-        For unit dual quaternions dq.inverse() = dq.quaternion_conjugate()
+        For unit dual quaternions dq.inverse = dq.quaternion_conjugate()
         """
-        q_r_inv = self.q_r.inverse()
+        q_r_inv = self.q_r.inverse
         return DualQuaternion(q_r_inv, -q_r_inv * self.q_d * q_r_inv)
 
     def is_normalized(self):
         """Check if the dual quaternion is normalized"""
-        if np.isclose(self.q_r.norm(), 0):
+        if np.isclose(self.q_r.norm, 0):
             return True
-        rot_normalized = np.isclose(self.q_r.norm(), 1)
-        trans_normalized = np.isclose(self.q_d / self.q_r.norm(), self.q_d)
+        rot_normalized = np.isclose(self.q_r.norm, 1)
+        trans_normalized = (self.q_d / self.q_r.norm) == self.q_d
         return rot_normalized and trans_normalized
 
     def normalize(self):
@@ -250,15 +250,15 @@ class DualQuaternion(object):
         if np.isclose(theta, 0):
             return DualQuaternion.from_translation_vector(exponent*np.array(self.translation()))
         else:
-            s0 = self.q_r.vec / np.sin(theta/2)
+            s0 = self.q_r.vector / np.sin(theta/2)
             d = -2. * self.q_d.w / np.sin(theta / 2)
-            se = (self.q_d.vec - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
+            se = (self.q_d.vector - s0 * d/2 * np.cos(theta/2)) / np.sin(theta/2)
 
-        q_r = np.quaternion(np.cos(exponent*theta/2), 0, 0, 0)
-        q_r.vec = np.sin(exponent*theta/2) * s0
+        q_r = Quaternion(scalar=np.cos(exponent*theta/2),
+                         vector=np.sin(exponent*theta/2) * s0)
 
-        q_d = np.quaternion(-exponent*d/2 * np.sin(exponent*theta/2), 0, 0, 0)
-        q_d.vec = exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se
+        q_d = Quaternion(scalar=-exponent*d/2 * np.sin(exponent*theta/2),
+                         vector=exponent*d/2 * np.cos(exponent*theta/2) * s0 + np.sin(exponent*theta/2) * se)
 
         return DualQuaternion(q_r, q_d)
 
@@ -307,11 +307,8 @@ class DualQuaternion(object):
 
         :return 4 by 4 np.array
         """
-        homogeneous_mat = np.zeros([4, 4])
-        rot_mat = quaternion.as_rotation_matrix(self.q_r)
-        homogeneous_mat[:3, :3] = rot_mat
+        homogeneous_mat = self.q_r.transformation_matrix
         homogeneous_mat[:3, 3] = np.array(self.translation())
-        homogeneous_mat[3, 3] = 1.
 
         return homogeneous_mat
 
@@ -339,13 +336,13 @@ class DualQuaternion(object):
 
         :return: list [x y z]
         """
-        mult = (2.0 * self.q_d) * self.q_r.conjugate()
+        mult = (2.0 * self.q_d) * self.q_r.conjugate
 
         return [mult.x, mult.y, mult.z]
 
     def normalized(self):
         """Return a copy of the normalized dual quaternion"""
-        norm_qr = self.q_r.norm()
+        norm_qr = self.q_r.norm
         return DualQuaternion(self.q_r/norm_qr, self.q_d/norm_qr)
 
     def as_dict(self):
@@ -367,12 +364,12 @@ class DualQuaternion(object):
         :rtype np.array(3), np.array(3), float, float
         """
         # start by extracting theta and l directly from the real part of the dual quaternion
-        theta = self.q_r.angle()
+        theta = self.q_r.angle
         theta_close_to_zero = np.isclose(theta, 0)
         t = np.array(self.translation())
 
         if not theta_close_to_zero:
-            l = self.q_r.vec / np.sin(theta/2)  # since q_r is normalized, l should be normalized too
+            l = self.q_r.vector / np.sin(theta/2)  # since q_r is normalized, l should be normalized too
 
             # displacement d along the line is the projection of the translation onto the line l
             d = np.dot(t, l)
@@ -407,9 +404,7 @@ class DualQuaternion(object):
                                  .format(l, np.linalg.norm(l)))
         theta = float(theta)
         d = float(d)
-        q_r = np.quaternion(np.cos(theta/2), 0, 0, 0)
-        q_r.vec = np.sin(theta/2) * l
-        q_d = np.quaternion(-d/2 * np.sin(theta/2), 0, 0, 0)
-        q_d.vec = np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l
+        q_r = Quaternion(scalar=np.cos(theta/2), vector=np.sin(theta/2) * l)
+        q_d = Quaternion(scalar=-d/2 * np.sin(theta/2), vector=np.sin(theta/2) * m + d/2 * np.cos(theta/2) * l)
 
         return cls(q_r, q_d)
