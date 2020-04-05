@@ -11,9 +11,7 @@ Dual Quaternions ROS
     :target: https://GitHub.com/Achllle/dual_quaternions_ros/tags/
 
 Simple conversion methods for going from ROS `geometry_msgs` to dual quaternions and vice versa.
-For the dual_quaternions pythonic repo, see dual_quaternions_.
-
--- _dual_quaternions: https://github.com/Achllle/dual_quaternions
+For the dual_quaternions repo, see `dual_quaternions <https://github.com/Achllle/dual_quaternions>`__.
 
 Installation
 ------------
