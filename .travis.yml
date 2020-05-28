@@ -37,6 +37,7 @@ install:
   - sudo pip uninstall numpy -y
   - pip install numpy
   - cd ~/catkin_ws
+  - cd src && git clone https://github.com/Achllle/dual_quaternions.git  && cd ..
   - rosdep install --from-paths src --ignore-src -r -y
   - catkin_make
 # command to run tests
