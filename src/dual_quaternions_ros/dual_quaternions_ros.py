@@ -9,27 +9,18 @@ from dual_quaternions import DualQuaternion
 
 import geometry_msgs.msg
 
-
-def from_ros_pose(pose_msg):
+def from_ros(msg):
     """
-    Create a DualQuaternion instance from a ROS Pose msg
+    Create a DualQuaternion instance from a ROS Pose or Transform message
 
-    :param pose_msg: geometry_msgs.msg.Pose()
+    :param msg: geometry_msgs.msg.Pose or geometry_msgs.msg.Transform
     """
-    tra = pose_msg.position
-    rot = pose_msg.orientation
-
-    return DualQuaternion.from_quat_pose_array([rot.w, rot.x, rot.y, rot.z, tra.x, tra.y, tra.z])
-
-
-def from_ros_transform(transform_msg):
-    """
-    Create a DualQuaternion instance from a ROS Transform msg
-
-    :param transform_msg: geometry_msgs.msg.Transform()
-    """
-    tra = transform_msg.translation
-    rot = transform_msg.rotation
+    try:
+        tra = pose_msg.position
+        rot = pose_msg.orientation
+    except AttributeError:
+        tra = transform_msg.translation
+        rot = transform_msg.rotation
 
     return DualQuaternion.from_quat_pose_array([rot.w, rot.x, rot.y, rot.z, tra.x, tra.y, tra.z])
 
