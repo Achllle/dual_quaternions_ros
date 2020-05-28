@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='dual_quaternions_ros',
-      version='0.1.1',
+      version='0.1.2',
       description='Dual quaternion ROS converter',
       long_description=readme(),
       url='http://github.com/Achllle/dual_quaternions_ros/tree/master/dual_quaternions_ros',
