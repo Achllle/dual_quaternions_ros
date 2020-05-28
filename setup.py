@@ -14,4 +14,6 @@ setup(name='dual_quaternions_ros',
       license='MIT',
       install_requires=['dual_quaternions>=0.3.1'],
       packages=['dual_quaternions_ros'],
-      package_dir={'': 'src'})
+      package_dir={'': 'src'},
+      test_suite='nose.collector',
+      tests_require='nose')

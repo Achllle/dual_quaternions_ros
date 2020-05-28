@@ -10,3 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package()
 
 catkin_python_setup()
+
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_nosetests(tests/test_dq_ros.py)
+endif()

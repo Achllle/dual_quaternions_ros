@@ -16,16 +16,16 @@ def from_ros(msg):
     :param msg: geometry_msgs.msg.Pose or geometry_msgs.msg.Transform
     """
     try:
-        tra = pose_msg.position
-        rot = pose_msg.orientation
+        tra = msg.position
+        rot = msg.orientation
     except AttributeError:
-        tra = transform_msg.translation
-        rot = transform_msg.rotation
+        tra = msg.translation
+        rot = msg.rotation
 
     return DualQuaternion.from_quat_pose_array([rot.w, rot.x, rot.y, rot.z, tra.x, tra.y, tra.z])
 
 
-def ros_pose(dual_quat):
+def to_ros_pose(dual_quat):
     """ROS geometry_msgs.msg.Pose instance"""
     pose_msg = geometry_msgs.msg.Pose()
     quat_pose_arr = dual_quat.quat_pose_array()
@@ -38,7 +38,7 @@ def ros_pose(dual_quat):
     return pose_msg
 
 
-def ros_transform(dual_quat):
+def to_ros_transform(dual_quat):
     """ROS geometry_msgs.msg.Transform instance"""
     transform_msg = geometry_msgs.msg.Transform()
     quat_pose_arr = dual_quat.quat_pose_array()
