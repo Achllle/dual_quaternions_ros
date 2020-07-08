@@ -2,8 +2,8 @@
 Changelog for package dual_quaternions_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.4 (2020-07-07)
+------------------
 * Remove find_package (build) dependencies in dq_ros: not needed during build, just at runtime
 * Contributors: Achille
 
