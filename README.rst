@@ -23,18 +23,12 @@ pip
 
   pip install dual_quaternions
 
-ROS package
+ROS1 package
 ~~~~~~~~~~~
-
-Release into apt is on its way. Until then you'll have to build the catkin package from source.
 
 .. code-block:: bash
 
-  cd ~/catkin_ws/src
-  git clone https://github.com/Achllle/dual_quaternions_ros
-  cd ..
-  rosdep install --from-paths src/dual_quaternions_ros --ignore-src
-  catkin_make
+  apt install ros-$ROS_DISTRO-dual-quaternions-ros
 
 Requirements
 ~~~~~~~~~~~~
